@@ -71,29 +71,29 @@ namespace Credential_Manager_App
             string base64 = Convert.ToBase64String(cms.Encode());
             return Encoding.UTF8.GetBytes(base64);
         }
-        public Dictionary<string, object> HashEncrypt()
-        {
-            CredentialDialog credDiag = new CredentialDialog()
-            {
-                MainInstruction = "Type the username and password to store:",
-                Target = "Credential_Manager_App",
-                ShowSaveCheckBox = true,
-                ShowUIForSavedCredentials = true,
-                WindowTitle = "Credential Manager App"
-            };
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            SecureString ss = new SecureString();
-            if (credDiag.ShowDialog() == DialogResult.OK)
-            {
-                foreach (char c in credDiag.Password)
-                {
-                    ss.AppendChar(c);
-                }
-                result.Add("Username", credDiag.UserName);
-                result.Add("Password", ss);
-            }
-            return result;
-        }
+        //public Dictionary<string, object> HashEncrypt()
+        //{
+        //    CredentialDialog credDiag = new CredentialDialog()
+        //    {
+        //        MainInstruction = "Type the username and password to store:",
+        //        Target = "Credential_Manager_App",
+        //        ShowSaveCheckBox = true,
+        //        ShowUIForSavedCredentials = true,
+        //        WindowTitle = "Credential Manager App"
+        //    };
+        //    Dictionary<string, object> result = new Dictionary<string, object>();
+        //    SecureString ss = new SecureString();
+        //    if (credDiag.ShowDialog() == DialogResult.OK)
+        //    {
+        //        foreach (char c in credDiag.Password)
+        //        {
+        //            ss.AppendChar(c);
+        //        }
+        //        result.Add("Username", credDiag.UserName);
+        //        result.Add("Password", ss);
+        //    }
+        //    return result;
+        //}
 
         private string ConvertFromSecureToPlain(SecureString secStr)
         {

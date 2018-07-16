@@ -3,6 +3,7 @@ using Ookii.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -85,9 +86,7 @@ namespace Credential_Manager_App
             if (!String.IsNullOrEmpty(StoredCert))
             {
                 CertificateText = StoredCert;
-                selectCertBtn.IsDefault = false;
-                encryptBtn.IsEnabled = true;
-                encryptBtn.IsDefault = true;
+                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
                 ChangeCertTextStyle(CertBoxStyles.Good, ((MainWindow)Application.Current.MainWindow).activeThumbprintBox);
             }
             LoadWindowDimensions();
@@ -107,6 +106,29 @@ namespace Credential_Manager_App
                 { "WindowY", 450 }
             };
             return setts;
+        }
+
+        private enum EncryptButtonStatus : int
+        {
+            Off = 0,
+            On = 1
+        }
+
+        private void ChangeEncryptButtonStatus(EncryptButtonStatus status)
+        {
+            switch (status)
+            {
+                case EncryptButtonStatus.Off:
+                    encryptBtn.IsDefault = false;
+                    encryptBtn.IsEnabled = false;
+                    selectCertBtn.IsDefault = true;
+                    break;
+                case EncryptButtonStatus.On:
+                    encryptBtn.IsEnabled = true;
+                    selectCertBtn.IsDefault = false;
+                    encryptBtn.IsDefault = true;
+                    break;
+            }
         }
 
         private void SaveCertThumbprint(string thumbprint)
@@ -150,6 +172,42 @@ namespace Credential_Manager_App
         {
             _app.SetPropertyValue("WindowX", (int)ActualWidth);
             _app.SetPropertyValue("WindowY", (int)ActualHeight);
+        }
+
+        #endregion
+
+        #region Enter Credential Button
+        private void inputPlainPasswordBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<string, object> credResult = GetCredential();
+            if (credResult)
+        }
+
+        private Dictionary<string, object> GetCredential()
+        {
+            CredentialDialog credDiag = new CredentialDialog()
+            {
+                MainInstruction = "Type the username and password to store:",
+                Target = "Credential_Manager_App",
+                ShowSaveCheckBox = true,
+                ShowUIForSavedCredentials = true,
+                WindowTitle = "Credential Manager App"
+            };
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            SecureString ss = new SecureString();
+            System.Windows.Forms.DialogResult diagResult = credDiag.ShowDialog();
+            bool result = diagResult.Equals(System.Windows.Forms.DialogResult.OK);
+            if (credDiag.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                foreach (char c in credDiag.Password)
+                {
+                    ss.AppendChar(c);
+                }
+                dict.Add("Result", result);
+                dict.Add("Username", credDiag.UserName);
+                dict.Add("Password", ss);
+            }
+            return dict;
         }
 
         #endregion
@@ -255,7 +313,7 @@ namespace Credential_Manager_App
         #region CertBox Right-Click Menu
         private void chooseInstalledCert_Click(object sender, RoutedEventArgs e)
         {
-            Thread cThread = new Thread(openCertSelector)
+            Thread cThread = new Thread(OpenCertSelector)
             {
                 Name = "CertSelector",
                 IsBackground = true
@@ -264,7 +322,7 @@ namespace Credential_Manager_App
             cThread.Start();
         }
 
-        private void openCertSelector()
+        private void OpenCertSelector()
         {
             CertSelector certSelector = new CertSelector();
             bool? result = certSelector.ShowDialog();
@@ -273,18 +331,14 @@ namespace Credential_Manager_App
                 Dispatcher.Invoke(() =>
                 {
                     CertificateText = certSelector.SelectedCert.SHA1Thumbprint;
-                    encryptBtn.IsEnabled = true;
-                    selectCertBtn.IsDefault = false;
-                    encryptBtn.IsDefault = true;
+                    ChangeEncryptButtonStatus(EncryptButtonStatus.On);
                 });
             }
         }
 
         private void clearCertificate_Click(object sender, RoutedEventArgs e)
         {
-            encryptBtn.IsDefault = false;
-            encryptBtn.IsEnabled = false;
-            selectCertBtn.IsDefault = true;
+            ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
             _app.SetPropertyValue("EncryptionCertificate", String.Empty);
             CertificateText = String.Empty;
         }

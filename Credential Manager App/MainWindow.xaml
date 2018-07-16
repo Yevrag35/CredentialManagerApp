@@ -124,7 +124,7 @@
                     Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" Focusable="False" IsTabStop="False"
                     ContextMenu="{StaticResource CertificateContextMenu}" TextChanged="activeThumbprintBox_TextChanged"/>
 
-            <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="FIND" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
+            <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="Browse" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
                     IsDefault="True"/>
         </Grid>
         <!-- End of Certificate Chooser -->
