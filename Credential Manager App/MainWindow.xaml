@@ -1,0 +1,235 @@
+﻿<Window x:Class="Credential_Manager_App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Credential_Manager_App"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing" StateChanged="Window_StateChanged"
+        Title="Credential Manager App" Height="450" Width="800" MinHeight="320" MinWidth="690">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.25*"/>
+            <ColumnDefinition Width="0.4*" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="88"/>
+            <ColumnDefinition Width="0.75*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="10" />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition Height="1.1*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="520" />
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <!-- Banner Title -->
+            <Label Content="Credential Manager App"
+                  Grid.Column="1" Grid.Row="0" FontFamily="Impact" FontSize="50" 
+                  VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <!-- End of Banner -->
+        
+            <!-- Lock Picture -->
+            <Image x:Name="lockPicture" Grid.Row="0" Source="Media/lock_256.png" Grid.Column="2" HorizontalAlignment="Left"/>
+            <!-- End of Picture -->
+        </Grid>
+        
+        <!-- Encryption Area -->
+        <Border Grid.Column="2" Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" BorderThickness="3,2,3,4" CornerRadius="2" BorderBrush="DarkBlue">
+            <Grid x:Name="encAreaGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.55*"/>
+                    <ColumnDefinition Width="15*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="28"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="15*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="28"/>
+                    <ColumnDefinition Width="0.75*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0.5*"/>
+                    <RowDefinition />
+                    <RowDefinition Height="28"/>
+                    <RowDefinition />
+                    <RowDefinition Height="10"/>
+                    <RowDefinition />
+                    <RowDefinition Height="28"/>
+                    <RowDefinition />
+                    <RowDefinition Height="0.5*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Copy to Clipboard Buttons -->
+                <Button x:Name="copyUserNamePlainBtn" Grid.Column="3" Grid.Row="2" TabIndex="4"/>
+                <Button x:Name="copyPasswordPlainBtn" Grid.Column="3" Grid.Row="6" TabIndex="5"/>
+                <Button x:Name="copyUserwordHashBtn" Grid.Column="7" Grid.Row="2" TabIndex="6"/>
+                <Button x:Name="copyPasswordHashBtn" Grid.Column="7" Grid.Row="6" TabIndex="7"/>
+                <!-- End of Clipboard Buttons -->
+                
+                <!-- Plain Input Fields -->
+                <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1"
+                        Text="{Binding Path=DefaultUserNameText}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontStyle="Italic" FontWeight="Thin" FontSize="13"
+                         GotKeyboardFocus="inputPlainUserName_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainUserName_PreviewMouseLeftButtonDown" LostKeyboardFocus="inputPlainUserName_LostKeyboardFocus"/>
+                <Button x:Name="inputPlainPasswordBtn" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Content="CLICK TO ENTER CREDENTIAL" FontWeight="Bold" />
+                <!-- <PasswordBox x:Name="inputPlainPasswordBox" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" IsTabStop="False" IsEnabled="False"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" /> -->
+                <!-- End of Plain Input Fields-->
+                
+                <!-- Hash Output Fields -->
+                <TextBox x:Name="outputHashUserName" Grid.Column="5" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" Focusable="False" IsHitTestVisible="False" IsTabStop="False"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="MS Office Symbol Regular" FontSize="14" FontWeight="Normal"/>
+                <TextBox x:Name="outputHashPassword" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" Focusable="False" IsHitTestVisible="False" IsTabStop="False"
+                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" FontFamily="MS Office Symbol Regular" FontSize="14" FontWeight="Normal"/>
+                <!-- End of Hash Output Fields -->
+                
+                <!-- Labels -->
+                <Label Content="USERNAME:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                <Label Content="PASSWORD:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                <Label Content="USERNAME HASH:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                <Label Content="PASSWORD HASH:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                <!-- End of Labels-->
+            </Grid>
+        </Border>
+        <!-- End of Encryption Area -->
+        
+        <!-- Certificate Chooser -->
+        <Grid Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" x:Name="CertificateChooser">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="0.25*" />
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
+                <TextBox x:Key="DefCertText" Text="    &lt;No Certificate Chosen&gt;" />
+                <!-- Certificate Context Menu -->
+                <ContextMenu x:Key="CertificateContextMenu" Background="White">
+                    <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="chooseInstalledCert_Click"/>
+                    <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="selectCertBtn_Click"/>
+                    <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" />
+                </ContextMenu>
+                <!-- End of Certificate Context Menu -->
+            </Grid.Resources>
+            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
+                    Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" Focusable="False" IsTabStop="False"
+                    ContextMenu="{StaticResource CertificateContextMenu}" TextChanged="activeThumbprintBox_TextChanged"/>
+
+            <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="FIND" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
+                    IsDefault="True"/>
+        </Grid>
+        <!-- End of Certificate Chooser -->
+        
+        <!-- Encrypt Button -->
+        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="False"
+                Width="175" Height="75" Content="ENCRYPT" FontFamily="MS Office Symbol Bold" FontSize="24" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <!-- End of Encrypt Button -->
+    </Grid>
+    
+    <!-- Window Design -->
+    <Window.Background>
+        <LinearGradientBrush StartPoint='0,0' EndPoint='0,1'>
+            <LinearGradientBrush.GradientStops>
+                <GradientStop Color='#C4CBD8' Offset='0' />
+                <GradientStop Color='#E6EAF5' Offset='0.2' />
+                <GradientStop Color='#CFD7E2' Offset='0.9' />
+                <GradientStop Color='#C4CBD8' Offset='1' />
+            </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
+    </Window.Background>
+    <Window.Resources>
+        <!--Control colors.-->
+        <Color x:Key="ControlNormalColor">#336699</Color>
+        <Color x:Key="ControlMouseOverColor">#6699FF</Color>
+        <Color x:Key="DisabledControlColor">#FFF2F2F2</Color>
+        <Color x:Key="DisabledForegroundColor">#FFBFBFBF</Color>
+        <Color x:Key="ControlPressedColor">#FF211AA9</Color>
+
+        <!-- Font to use when entering text -->
+        <FontFamily x:Key="activeFont">Trebuchet MS</FontFamily>
+
+        <Style x:Key="ButtonFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border>
+                            <Rectangle Margin="2" StrokeThickness="1" Stroke="#60000000" StrokeDashArray="1 2" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Button -->
+        <Style TargetType="Button">
+            <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="OverridesDefaultStyle" Value="False" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}" />
+            <!--<Setter Property="MinHeight" Value="29px" />
+            <Setter Property="MinWidth"  Value="103px" />-->
+            <Setter Property="Foreground" Value="#FFFFFFFF" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border TextBlock.Foreground="{TemplateBinding Foreground}" x:Name="Border">
+                            <Border.Background>
+                                <SolidColorBrush  Color="{DynamicResource ControlNormalColor}" />
+                            </Border.Background>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0:0:0.5" />
+                                        <VisualTransition GeneratedDuration="0" To="Pressed" />
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="MouseOver">
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlMouseOverColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlPressedColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource DisabledControlColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource DisabledForegroundColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Margin="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <!-- End of Window Design -->
+</Window>
