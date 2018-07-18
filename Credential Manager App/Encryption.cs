@@ -1,5 +1,4 @@
-﻿using Ookii.Dialogs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,7 +11,6 @@ using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows;
-using System.Windows.Forms;
 
 namespace Credential_Manager_App
 {
@@ -34,8 +32,12 @@ namespace Credential_Manager_App
             }
         }
 
+        #region Constructors
         public Encryption() { }
 
+        #endregion
+
+        #region Certificate Methods
         public void SetActiveCertificate(string SHA1Thumbprint)
         {
             X509Store store = new X509Store(StoreLocation.CurrentUser);
@@ -61,39 +63,37 @@ namespace Credential_Manager_App
             return cert.Thumbprint;
         }
 
-        public byte[] EncryptString(string plainString)
+        #endregion
+
+        #region Encryption Methods
+        public string EncryptStringToString(object plainString)
         {
-            byte[] btContent = Encoding.UTF8.GetBytes(plainString);
+            Type plainStringType = plainString.GetType();
+            string baseString;
+            if (plainStringType != typeof(string) && plainStringType != typeof(SecureString))
+            {
+                throw new ArgumentException("Parameter must be of a string value!");
+            }
+            else if (plainStringType == typeof(SecureString))
+            {
+                baseString = ConvertFromSecureToPlain((SecureString)plainString);
+            }
+            else
+            {
+                baseString = (string)plainString;
+            }
+            byte[] btContent = Encoding.UTF8.GetBytes(baseString);
             ContentInfo content = new ContentInfo(btContent);
             EnvelopedCms cms = new EnvelopedCms(content);
             CmsRecipient recipient = new CmsRecipient(_cert);
             cms.Encrypt(recipient);
-            string base64 = Convert.ToBase64String(cms.Encode());
+            return Convert.ToBase64String(cms.Encode());
+        }
+        public byte[] EncryptStringToBytes(object plainString)
+        {
+            string base64 = EncryptStringToString(plainString);
             return Encoding.UTF8.GetBytes(base64);
         }
-        //public Dictionary<string, object> HashEncrypt()
-        //{
-        //    CredentialDialog credDiag = new CredentialDialog()
-        //    {
-        //        MainInstruction = "Type the username and password to store:",
-        //        Target = "Credential_Manager_App",
-        //        ShowSaveCheckBox = true,
-        //        ShowUIForSavedCredentials = true,
-        //        WindowTitle = "Credential Manager App"
-        //    };
-        //    Dictionary<string, object> result = new Dictionary<string, object>();
-        //    SecureString ss = new SecureString();
-        //    if (credDiag.ShowDialog() == DialogResult.OK)
-        //    {
-        //        foreach (char c in credDiag.Password)
-        //        {
-        //            ss.AppendChar(c);
-        //        }
-        //        result.Add("Username", credDiag.UserName);
-        //        result.Add("Password", ss);
-        //    }
-        //    return result;
-        //}
 
         private string ConvertFromSecureToPlain(SecureString secStr)
         {
@@ -102,20 +102,29 @@ namespace Credential_Manager_App
             Marshal.ZeroFreeBSTR(pPoint);
             return plain;
         }
-        public SecureString Decrypt(byte[] byteArray)
+        public SecureString Decrypt(byte[] encBytes)
         {
-            string base64 = Encoding.UTF8.GetString(byteArray);     // back to Base64 string
-            byte[] content = Convert.FromBase64String(base64);      // get byte[] of Base64 string
-            EnvelopedCms cms = new EnvelopedCms();
-            cms.Decode(content);
-            cms.Decrypt();
+            string plain = PlainDecrypt(encBytes);
             SecureString ss = new SecureString();
-            foreach (char c in Encoding.UTF8.GetString(cms.ContentInfo.Content))
+            foreach (char c in plain)
             {
                 ss.AppendChar(c);
             }
             return ss;
         }
+        public string PlainDecrypt(byte[] encBytes)
+        {
+            string base64 = Encoding.UTF8.GetString(encBytes);      // back to Base64 string
+            byte[] content = Convert.FromBase64String(base64);      // get byte[] of Base64 string
+            EnvelopedCms cms = new EnvelopedCms();
+            cms.Decode(content);
+            cms.Decrypt();
+            return Encoding.UTF8.GetString(cms.ContentInfo.Content);
+        }
+
+        #endregion
+
+        #region Credential Methods
         public PSCredential ToPSCredential(string userName, byte[] byteArray)
         {
             SecureString secPass = Decrypt(byteArray);
@@ -135,8 +144,11 @@ namespace Credential_Manager_App
             }
             return col;
         }
+
+        #endregion
     }
 
+    #region Viewable Cert Abstract Class
     public abstract class ViewableCertificate
     {
         public const int CRYPTUI_DISABLE_ADDTOSTORE = 0x00000010;
@@ -169,6 +181,9 @@ namespace Credential_Manager_App
         }
     }
 
+    #endregion
+
+    #region CertListItem : ViewableCertificate, IEquatable<CertListItem>
     public class CertListItem : ViewableCertificate, IEquatable<CertListItem>
     {
         private X509Certificate2 _cert;
@@ -199,7 +214,7 @@ namespace Credential_Manager_App
                 int error = Marshal.GetLastWin32Error();
                 if (error != 1223)
                 {
-                    System.Windows.MessageBox.Show(error.ToString());
+                    MessageBox.Show("Showing the certificate errored with exit code " + error.ToString(), "ERROR!", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -235,6 +250,9 @@ namespace Credential_Manager_App
         }
     }
 
+    #endregion
+
+    #region CertEquality
     public class CertEquality : EqualityComparer<CertListItem>
     {
         public override bool Equals(CertListItem x, CertListItem y)
@@ -253,4 +271,6 @@ namespace Credential_Manager_App
             return 0;
         }
     }
+
+    #endregion
 }

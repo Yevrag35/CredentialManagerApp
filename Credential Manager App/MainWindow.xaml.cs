@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Credential_Manager_App
 {
@@ -177,10 +179,18 @@ namespace Credential_Manager_App
         #endregion
 
         #region Enter Credential Button
-        private void inputPlainPasswordBtn_Click(object sender, RoutedEventArgs e)
+        private void inputPlainPasswordBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            Dictionary<string, object> credResult = GetCredential();
-            if (credResult)
+            if (encryptBtn.IsEnabled)
+            {
+                Dictionary<string, object> credResult = GetCredential();
+                if (credResult != null && credResult["Result"].Equals(true))
+                {
+                    // Do your shit!
+                    string base64 = _enc.EncryptStringToString(credResult["Password"]);
+                    outputHashPassword.Text = base64;
+                }
+            }
         }
 
         private Dictionary<string, object> GetCredential()
@@ -193,11 +203,15 @@ namespace Credential_Manager_App
                 ShowUIForSavedCredentials = true,
                 WindowTitle = "Credential Manager App"
             };
+            if (!String.IsNullOrEmpty(inputPlainUserName.Text))
+            {
+                //credDiag.
+            }
             Dictionary<string, object> dict = new Dictionary<string, object>();
             SecureString ss = new SecureString();
             System.Windows.Forms.DialogResult diagResult = credDiag.ShowDialog();
             bool result = diagResult.Equals(System.Windows.Forms.DialogResult.OK);
-            if (credDiag.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (result)
             {
                 foreach (char c in credDiag.Password)
                 {
@@ -206,8 +220,12 @@ namespace Credential_Manager_App
                 dict.Add("Result", result);
                 dict.Add("Username", credDiag.UserName);
                 dict.Add("Password", ss);
+                return dict;
             }
-            return dict;
+            else
+            {
+                return null;
+            }
         }
 
         #endregion
@@ -289,6 +307,27 @@ namespace Credential_Manager_App
 
         #endregion
 
+        #region Password Box Behavior
+        private void inputPlainPasswordBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            PasswordBox pb = (PasswordBox)sender;
+            if (!String.IsNullOrEmpty(pb.Password))
+            {
+                pb.SelectAll();
+            }
+        }
+        private void inputPlainPasswordBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            PasswordBox pb = (PasswordBox)sender;
+            if (!pb.IsKeyboardFocusWithin)
+            {
+                e.Handled = true;
+                pb.Focus();
+            }
+        }
+
+        #endregion
+
         #region Find Certificate Button Behavior
         private void selectCertBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -343,7 +382,33 @@ namespace Credential_Manager_App
             CertificateText = String.Empty;
         }
 
+
+
+
         #endregion
 
+        #region HashBox Right-Click Menu
+        private void selectAll_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem mi = (MenuItem)e.Source;
+            ContextMenu ctxMenu = (ContextMenu)mi.Parent;
+            TextBox tb = (TextBox)ctxMenu.PlacementTarget;
+            tb.SelectAll();
+        }
+
+        #endregion
+
+        #region Copy to Clipboard Button Behavior
+        private void CopyBtnClip_Click(object sender, RoutedEventArgs e)
+        {
+            Button but = (Button)sender;
+            var getme = encAreaGrid.Children.OfType<UIElement>().ToList();
+            IEnumerable<TextBox> getBoxes = getme.Where(x => x.Uid == "gridTextBox").Cast<TextBox>();
+            TextBox gotcha = getBoxes.Single(x => x.Name == but.Uid);
+
+            Clipboard.SetText(gotcha.Text);
+        }
+
+        #endregion
     }
 }
