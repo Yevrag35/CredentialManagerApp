@@ -84,14 +84,14 @@
                 <!-- End of Clipboard Buttons -->
                 
                 <!-- Plain Input Fields -->
-                <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1" x:Uid="gridTextBox"
+                <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1" x:Uid="gridTextBox" TextChanged="UserNameBox_TextChanged"
                          Text="{Binding Path=DefaultUserNameText}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontStyle="Italic" FontWeight="Thin" FontSize="13"
                          GotKeyboardFocus="inputPlainUserName_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainUserName_PreviewMouseLeftButtonDown" LostKeyboardFocus="inputPlainUserName_LostKeyboardFocus"/>
                 <!--<Button x:Name="inputPlainPasswordBtn" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="inputPlainPasswordBtn_Click"
                         Content="CLICK TO ENTER CREDENTIAL" FontWeight="Bold" />-->
                 <PasswordBox x:Name="inputPlainPasswordBox" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
-                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick"
+                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick" PasswordChanged="PassBox_PasswordChanged"
                         GotKeyboardFocus="inputPlainPasswordBox_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainPasswordBox_PreviewMouseLeftButtonDown"/>
                 <!--End of Plain Input Fields-->
                 
@@ -140,7 +140,7 @@
         <!-- End of Certificate Chooser -->
         
         <!-- Encrypt Button -->
-        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="False"
+        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="False" Click="EncryptBtn_Click"
                 Width="175" Height="75" Content="ENCRYPT" FontFamily="MS Office Symbol Bold" FontSize="24" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
         <!-- End of Encrypt Button -->
     </Grid>

@@ -88,11 +88,11 @@ namespace Credential_Manager_App
             if (!String.IsNullOrEmpty(StoredCert))
             {
                 CertificateText = StoredCert;
-                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
                 ChangeCertTextStyle(CertBoxStyles.Good, ((MainWindow)Application.Current.MainWindow).activeThumbprintBox);
             }
             LoadWindowDimensions();
             _defFont = FontFamily;
+            encryptBtn.CommandParameter = EncryptButtonBehavior.Encrypt;
         }
 
         #endregion
@@ -118,18 +118,21 @@ namespace Credential_Manager_App
 
         private void ChangeEncryptButtonStatus(EncryptButtonStatus status)
         {
-            switch (status)
+            if (encryptBtn != null)
             {
-                case EncryptButtonStatus.Off:
-                    encryptBtn.IsDefault = false;
-                    encryptBtn.IsEnabled = false;
-                    selectCertBtn.IsDefault = true;
-                    break;
-                case EncryptButtonStatus.On:
-                    encryptBtn.IsEnabled = true;
-                    selectCertBtn.IsDefault = false;
-                    encryptBtn.IsDefault = true;
-                    break;
+                switch (status)
+                {
+                    case EncryptButtonStatus.Off:
+                        encryptBtn.IsDefault = false;
+                        encryptBtn.IsEnabled = false;
+                        selectCertBtn.IsDefault = true;
+                        break;
+                    case EncryptButtonStatus.On:
+                        encryptBtn.IsEnabled = true;
+                        selectCertBtn.IsDefault = false;
+                        encryptBtn.IsDefault = true;
+                        break;
+                }
             }
         }
 
@@ -181,14 +184,12 @@ namespace Credential_Manager_App
         #region Enter Credential Button
         private void inputPlainPasswordBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (encryptBtn.IsEnabled)
+            if (encryptBtn.CommandParameter.Equals(EncryptButtonBehavior.Encrypt))
             {
                 Dictionary<string, object> credResult = GetCredential();
                 if (credResult != null && credResult["Result"].Equals(true))
                 {
-                    // Do your shit!
-                    string base64 = _enc.EncryptStringToString(credResult["Password"]);
-                    outputHashPassword.Text = base64;
+                    EncryptButton_Encrypt(encryptBtn, credResult);
                 }
             }
         }
@@ -230,6 +231,66 @@ namespace Credential_Manager_App
 
         #endregion
 
+        #region Encrypt Button Behavior
+        private enum EncryptButtonBehavior : int
+        {
+            Encrypt = 0,
+            Reset = 1
+        }
+
+        private void EncryptBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Button eb = (Button)sender;
+            switch (eb.CommandParameter)
+            {
+                case EncryptButtonBehavior.Encrypt:
+                    EncryptButton_Encrypt(eb);
+                    break;
+                case EncryptButtonBehavior.Reset:
+                    EncryptButton_Reset(eb);
+                    break;
+            }
+        }
+        private void EncryptButton_Encrypt(object sender, Dictionary<string, object> credResult = null)
+        {
+            Button eb = (Button)sender;
+            // Do you shit here!
+            string un;
+            string ps;
+            if (credResult != null)
+            {
+                un = (string)credResult["UserName"];
+                ps = (string)credResult["Password"];
+                inputPlainPasswordBox.Password = ps;
+            }
+            else
+            {
+                un = inputPlainUserName.Text;
+                ps = inputPlainPasswordBox.Password;
+            }
+            string base64 = _enc.EncryptStringToString(ps);
+            string base64User = _enc.EncryptStringToString(un);
+            outputHashPassword.Text = base64;
+            inputPlainUserName.Text = un;
+            outputHashUserName.Text = base64User;
+            eb.Content = "RESET";
+            eb.CommandParameter = EncryptButtonBehavior.Reset;
+        }
+        private void EncryptButton_Reset(object sender)
+        {
+            Button eb = (Button)sender;
+            // Do you shit here!
+            inputPlainUserName.Text = String.Empty;
+            inputPlainPasswordBox.Password = String.Empty;
+            outputHashUserName.Text = String.Empty;
+            outputHashPassword.Text = String.Empty;
+            eb.Content = "ENCRYPT";
+            eb.CommandParameter = EncryptButtonBehavior.Encrypt;
+            eb.IsEnabled = false;
+        }
+
+        #endregion
+
         #region Certificate Field and Button Behavior
 
         private enum CertBoxStyles : int
@@ -257,6 +318,7 @@ namespace Credential_Manager_App
             TextBox tb = (TextBox)sender;
             if (tb.Text == defCertText)
             {
+                ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
                 ChangeCertTextStyle(CertBoxStyles.Bad, tb);
             }
             else
@@ -287,9 +349,9 @@ namespace Credential_Manager_App
         private void inputPlainUserName_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
             TextBox unbox = (TextBox)sender;
-            unbox.HorizontalContentAlignment = HorizontalAlignment.Center;
             if (String.IsNullOrEmpty(unbox.Text))
             {
+                unbox.HorizontalContentAlignment = HorizontalAlignment.Center;
                 unbox.FontStyle = FontStyles.Italic;
                 unbox.FontFamily = _defFont;
                 unbox.FontSize = 13;
@@ -302,6 +364,19 @@ namespace Credential_Manager_App
             {
                 e.Handled = true;
                 inputPlainUserName.Focus();
+            }
+        }
+        private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            if (tb.Text != defUserText && !String.IsNullOrEmpty(inputPlainPasswordBox.Password) &&
+                activeThumbprintBox.Text != defCertText)
+            {
+                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+            }
+            else
+            {
+                ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
             }
         }
 
@@ -323,6 +398,19 @@ namespace Credential_Manager_App
             {
                 e.Handled = true;
                 pb.Focus();
+            }
+        }
+        private void PassBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            PasswordBox pb = (PasswordBox)sender;
+            if (!String.IsNullOrEmpty(pb.Password) && !String.IsNullOrEmpty(inputPlainUserName.Text) &&
+                activeThumbprintBox.Text != defCertText)
+            {
+                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+            }
+            else
+            {
+                ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
             }
         }
 
@@ -370,7 +458,10 @@ namespace Credential_Manager_App
                 Dispatcher.Invoke(() =>
                 {
                     CertificateText = certSelector.SelectedCert.SHA1Thumbprint;
-                    ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                    if (!String.IsNullOrEmpty(inputPlainPasswordBox.Password) && !String.IsNullOrEmpty(inputPlainUserName.Text))
+                    {
+                        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                    }
                 });
             }
         }
@@ -381,9 +472,6 @@ namespace Credential_Manager_App
             _app.SetPropertyValue("EncryptionCertificate", String.Empty);
             CertificateText = String.Empty;
         }
-
-
-
 
         #endregion
 

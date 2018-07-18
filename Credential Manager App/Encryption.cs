@@ -16,6 +16,7 @@ namespace Credential_Manager_App
 {
     public class Encryption
     {
+        #region Properties/Fields
         private X509Certificate2 _cert;
         public string ActiveThumbprint
         {
@@ -31,6 +32,8 @@ namespace Credential_Manager_App
                 }
             }
         }
+
+        #endregion
 
         #region Constructors
         public Encryption() { }
