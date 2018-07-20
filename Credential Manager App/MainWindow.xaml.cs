@@ -606,7 +606,7 @@ namespace Credential_Manager_App
         }
         private void passBoxCopyBtn_Click(object sender, RoutedEventArgs e)
         {
-            PasswordBox pb = (PasswordBox)sender;
+            Button pb = (Button)sender;
             var getme = encAreaGrid.Children.OfType<UIElement>().ToList();
             foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList())
             {
