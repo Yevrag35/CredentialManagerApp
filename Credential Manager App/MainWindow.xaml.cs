@@ -31,6 +31,7 @@ namespace Credential_Manager_App
         public Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
+        private bool check;
         private const string defUserText = @"<Enter the username>";
         private const string defCertText = @"    <No Certificate Chosen>";
         private string CertificateText
@@ -108,6 +109,45 @@ namespace Credential_Manager_App
                 { "WindowY", 450 }
             };
             return setts;
+        }
+        private bool AllInfoPresent(TabItem ti)
+        {
+            switch (ti.Name)
+            {
+                case "EncryptTab":
+                    if (String.IsNullOrEmpty(inputPlainPasswordBox.Password) || String.IsNullOrEmpty(inputPlainUserName.Text) ||
+                        String.IsNullOrEmpty(outputHashPassword.Text) || String.IsNullOrEmpty(outputHashUserName.Text))
+                    {
+                        check = false;
+                    }
+                    else if (String.IsNullOrEmpty(activeThumbprintBox.Text))
+                    {
+                        check = false;
+                    }
+                    else
+                    {
+                        check = true;
+                    }
+                    break;
+                case "DecryptTab":
+                    if (String.IsNullOrEmpty(inputHashPassword.Text) || String.IsNullOrEmpty(inputHashUserName.Text) ||
+                        String.IsNullOrEmpty(outputPlainUserName.Text) || String.IsNullOrEmpty(outputPass.Password))
+                    {
+                        check = false;
+                    }
+                    else if (String.IsNullOrEmpty(activeThumbprintBox.Text))
+                    {
+                        check = false;
+                    }
+                    else
+                    {
+                        check = true;
+                    }
+                    break;
+            }
+            bool localChck = check;
+            check = false;
+            return localChck;
         }
 
         private enum EncryptButtonStatus : int
@@ -235,7 +275,8 @@ namespace Credential_Manager_App
         private enum EncryptButtonBehavior : int
         {
             Encrypt = 0,
-            Reset = 1
+            Reset = 1,
+            Decrypt = 2
         }
 
         private void EncryptBtn_Click(object sender, RoutedEventArgs e)
@@ -247,7 +288,10 @@ namespace Credential_Manager_App
                     EncryptButton_Encrypt(eb);
                     break;
                 case EncryptButtonBehavior.Reset:
-                    EncryptButton_Reset(eb);
+                    EncryptButton_Reset(eb, tabControl);
+                    break;
+                case EncryptButtonBehavior.Decrypt:
+                    EncryptButton_Decrypt(eb);
                     break;
             }
         }
@@ -276,17 +320,42 @@ namespace Credential_Manager_App
             eb.Content = "RESET";
             eb.CommandParameter = EncryptButtonBehavior.Reset;
         }
-        private void EncryptButton_Reset(object sender)
+        private void EncryptButton_Decrypt(object sender)
+        {
+            Button eb = (Button)sender;
+            outputPlainUserName.Text = _enc.PlainDecrypt(inputHashUserName.Text);
+            outputPass.Password = _enc.PlainDecrypt(inputHashPassword.Text);
+            if (!String.IsNullOrEmpty(outputPass.Password) && !String.IsNullOrEmpty(outputPlainUserName.Text))
+            {
+                eb.Content = "RESET";
+                eb.CommandParameter = EncryptButtonBehavior.Reset;
+            }
+        }
+        private void EncryptButton_Reset(object sender, TabControl tbc)
         {
             Button eb = (Button)sender;
             // Do you shit here!
-            inputPlainUserName.Text = String.Empty;
-            inputPlainPasswordBox.Password = String.Empty;
-            outputHashUserName.Text = String.Empty;
-            outputHashPassword.Text = String.Empty;
-            eb.Content = "ENCRYPT";
-            eb.CommandParameter = EncryptButtonBehavior.Encrypt;
-            eb.IsEnabled = false;
+            switch (tbc.SelectedIndex)
+            {
+                case 0:
+                    inputPlainUserName.Text = String.Empty;
+                    inputPlainPasswordBox.Password = String.Empty;
+                    outputHashUserName.Text = String.Empty;
+                    outputHashPassword.Text = String.Empty;
+                    eb.Content = "ENCRYPT";
+                    eb.CommandParameter = EncryptButtonBehavior.Encrypt;
+                    eb.IsEnabled = false;
+                    break;
+                case 1:
+                    inputHashUserName.Text = String.Empty;
+                    inputHashPassword.Text = String.Empty;
+                    outputPlainUserName.Text = String.Empty;
+                    outputPass.Password = String.Empty;
+                    eb.Content = "DECRYPT";
+                    eb.CommandParameter = EncryptButtonBehavior.Decrypt;
+                    break;
+            }
+                
         }
 
         #endregion
@@ -329,21 +398,22 @@ namespace Credential_Manager_App
 
         #endregion
 
-        #region UserName TextBox Behavior
+        #region Input Plain UserName TextBox Behavior
         private void inputPlainUserName_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            inputPlainUserName.HorizontalContentAlignment = HorizontalAlignment.Left;
-            if (inputPlainUserName.FontStyle == FontStyles.Italic)
+            TextBox tb = (TextBox)sender;
+            tb.HorizontalContentAlignment = HorizontalAlignment.Left;
+            if (tb.FontStyle == FontStyles.Italic)
             {
-                inputPlainUserName.Text = String.Empty;
-                inputPlainUserName.FontStyle = FontStyles.Normal;
-                inputPlainUserName.FontFamily = (FontFamily)Resources["activeFont"];
-                inputPlainUserName.FontSize = 14;
-                inputPlainUserName.FontWeight = FontWeights.Normal;
+                tb.Text = String.Empty;
+                tb.FontStyle = FontStyles.Normal;
+                tb.FontFamily = (FontFamily)Resources["activeFont"];
+                tb.FontSize = 14;
+                tb.FontWeight = FontWeights.Normal;
             }
             else
             {
-                inputPlainUserName.SelectAll();
+                tb.SelectAll();
             }
         }
         private void inputPlainUserName_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -360,10 +430,11 @@ namespace Credential_Manager_App
         }
         private void inputPlainUserName_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!inputPlainUserName.IsKeyboardFocusWithin)
+            TextBox tb = (TextBox)sender;
+            if (!tb.IsKeyboardFocusWithin)
             {
                 e.Handled = true;
-                inputPlainUserName.Focus();
+                tb.Focus();
             }
         }
         private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -382,7 +453,7 @@ namespace Credential_Manager_App
 
         #endregion
 
-        #region Password Box Behavior
+        #region Input Plain Password Box Behavior
         private void inputPlainPasswordBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
             PasswordBox pb = (PasswordBox)sender;
@@ -411,6 +482,39 @@ namespace Credential_Manager_App
             else
             {
                 ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
+            }
+        }
+
+        #endregion
+
+        #region Input Hash UserName TextBox Behavior
+        private void InputHash_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            if (!tb.IsKeyboardFocusWithin)
+            {
+                e.Handled = true;
+                tb.Focus();
+            }
+        }
+        private void InputHash_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            if (!String.IsNullOrEmpty(tb.Text))
+            {
+                tb.SelectAll();
+            }
+        }
+
+        private void Input_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            if (!String.IsNullOrEmpty(tb.Text))
+            {
+                if (!String.IsNullOrEmpty(inputHashUserName.Text) && !String.IsNullOrEmpty(inputHashPassword.Text))
+                {
+                    ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                }
             }
         }
 
@@ -491,10 +595,82 @@ namespace Credential_Manager_App
         {
             Button but = (Button)sender;
             var getme = encAreaGrid.Children.OfType<UIElement>().ToList();
+            foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList())
+            {
+                getme.Add(item);
+            }
             IEnumerable<TextBox> getBoxes = getme.Where(x => x.Uid == "gridTextBox").Cast<TextBox>();
             TextBox gotcha = getBoxes.Single(x => x.Name == but.Uid);
 
             Clipboard.SetText(gotcha.Text);
+        }
+        private void passBoxCopyBtn_Click(object sender, RoutedEventArgs e)
+        {
+            PasswordBox pb = (PasswordBox)sender;
+            var getme = encAreaGrid.Children.OfType<UIElement>().ToList();
+            foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList())
+            {
+                getme.Add(item);
+            }
+            IEnumerable<PasswordBox> getPBs = getme.Where(x => x.Uid == "passDecrypt").Cast<PasswordBox>();
+            PasswordBox gotcha = getPBs.Single(x => x.Name == pb.Uid);
+
+            Clipboard.SetText(gotcha.Password);
+        }
+
+        #endregion
+
+        #region Tab Control Selection Changed
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            e.Handled = true;
+            TabItem ti = (TabItem)e.AddedItems[0];
+            switch (ti.Name)
+            {
+                case "EncryptTab":
+                    if (!AllInfoPresent(ti))
+                    {
+                        if (String.IsNullOrEmpty(inputPlainPasswordBox.Password) || String.IsNullOrEmpty(inputPlainUserName.Text))
+                        {
+                            encryptBtn.IsEnabled = false;
+                        }
+                        else
+                        {
+                            ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                        }
+                        encryptBtn.Content = "ENCRYPT";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Encrypt;
+                    }
+                    else
+                    {
+                        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                        encryptBtn.Content = "RESET";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
+                    }
+                    break;
+                case "DecryptTab":
+                    if (!AllInfoPresent(ti))
+                    {
+                        if (String.IsNullOrEmpty(inputHashPassword.Text) || String.IsNullOrEmpty(inputHashUserName.Text))
+                        {
+                            ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
+                        }
+                        else
+                        {
+                            ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                        }
+                        encryptBtn.Content = "DECRYPT";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Decrypt;
+                    }
+                    else
+                    {
+                        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+                        encryptBtn.Content = "RESET";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
+                    }
+                    break;
+            }
+            
         }
 
         #endregion

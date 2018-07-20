@@ -7,144 +7,6 @@
         mc:Ignorable="d" WindowStartupLocation="CenterScreen"
         DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing" StateChanged="Window_StateChanged"
         Title="Credential Manager App" Height="450" Width="800" MinHeight="320" MinWidth="690">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.25*"/>
-            <ColumnDefinition Width="0.4*" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="88"/>
-            <ColumnDefinition Width="0.75*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="10" />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition Height="1.1*"/>
-        </Grid.RowDefinitions>
-        <Grid Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="520" />
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <!-- Banner Title -->
-            <Label Content="Credential Manager App"
-                  Grid.Column="1" Grid.Row="0" FontFamily="Impact" FontSize="50" 
-                  VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-            <!-- End of Banner -->
-        
-            <!-- Lock Picture -->
-            <Image x:Name="lockPicture" Grid.Row="0" Source="Media/lock_256.png" Grid.Column="2" HorizontalAlignment="Left"/>
-            <!-- End of Picture -->
-        </Grid>
-        
-        <!-- Encryption Area -->
-        <Border Grid.Column="2" Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" BorderThickness="3,2,3,4" CornerRadius="2" BorderBrush="DarkBlue">
-            <Grid x:Name="encAreaGrid">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.55*"/>
-                    <ColumnDefinition Width="15*"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="28"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="15*"/>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="28"/>
-                    <ColumnDefinition Width="0.75*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="0.5*"/>
-                    <RowDefinition />
-                    <RowDefinition Height="28"/>
-                    <RowDefinition />
-                    <RowDefinition Height="10"/>
-                    <RowDefinition />
-                    <RowDefinition Height="28"/>
-                    <RowDefinition />
-                    <RowDefinition Height="0.5*"/>
-                </Grid.RowDefinitions>
-                <Grid.Resources>
-                    <ContextMenu x:Key="HashMenu" Background="White">
-                        <MenuItem Header="Copy" Command="ApplicationCommands.Copy"/>
-                        <MenuItem x:Name="selectAll" Header="Select All" Click="selectAll_Click"/>
-                    </ContextMenu>
-                    <ToolTip x:Key="copyHashBtnTooltip">Copy hash to the clipboard</ToolTip>
-                </Grid.Resources>
-
-                <!-- Copy to Clipboard Buttons -->
-                <Button x:Name="copyUserNamePlainBtn" x:Uid="inputPlainUserName" Grid.Column="3" Grid.Row="2" TabIndex="4" ToolTip="Copy username to the clipboard" Click="CopyBtnClip_Click"/>
-                <Button x:Name="copyPasswordPlainBtn" x:Uid="inputPlainPasswordBox" Grid.Column="3" Grid.Row="6" TabIndex="5" ToolTip="Copy password to the clipboard" Click="CopyBtnClip_Click" IsEnabled="False"/>
-                <Button x:Name="copyUsernameHashBtn" x:Uid="outputHashUserName" Grid.Column="7" Grid.Row="2" TabIndex="6" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click"/>
-                <Button x:Name="copyPasswordHashBtn" x:Uid="outputHashPassword" Grid.Column="7" Grid.Row="6" TabIndex="7" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click"/>
-                <!-- End of Clipboard Buttons -->
-                
-                <!-- Plain Input Fields -->
-                <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1" x:Uid="gridTextBox" TextChanged="UserNameBox_TextChanged"
-                         Text="{Binding Path=DefaultUserNameText}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontStyle="Italic" FontWeight="Thin" FontSize="13"
-                         GotKeyboardFocus="inputPlainUserName_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainUserName_PreviewMouseLeftButtonDown" LostKeyboardFocus="inputPlainUserName_LostKeyboardFocus"/>
-                <!--<Button x:Name="inputPlainPasswordBtn" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
-                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="inputPlainPasswordBtn_Click"
-                        Content="CLICK TO ENTER CREDENTIAL" FontWeight="Bold" />-->
-                <PasswordBox x:Name="inputPlainPasswordBox" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
-                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick" PasswordChanged="PassBox_PasswordChanged"
-                        GotKeyboardFocus="inputPlainPasswordBox_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainPasswordBox_PreviewMouseLeftButtonDown"/>
-                <!--End of Plain Input Fields-->
-                
-                <!-- Hash Output Fields -->
-                <TextBox x:Name="outputHashUserName" Grid.Column="5" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" IsTabStop="False" x:Uid="gridTextBox"
-                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" FontSize="14" FontWeight="Normal" IsReadOnly="True" ContextMenu="{StaticResource HashMenu}"/>
-                <TextBox x:Name="outputHashPassword" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" IsTabStop="False" x:Uid="gridTextBox"
-                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" FontSize="14" FontWeight="Normal" IsReadOnly="True" ContextMenu="{StaticResource HashMenu}"/>
-                <!-- End of Hash Output Fields -->
-                
-                <!-- Labels -->
-                <Label Content="USERNAME:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
-                <Label Content="PASSWORD:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
-                <Label Content="USERNAME HASH:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
-                <Label Content="PASSWORD HASH:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
-                <!-- End of Labels-->
-            </Grid>
-        </Border>
-        <!-- End of Encryption Area -->
-        
-        <!-- Certificate Chooser -->
-        <Grid Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" x:Name="CertificateChooser">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="0.25*" />
-            </Grid.ColumnDefinitions>
-            <Grid.Resources>
-                <TextBox x:Key="DefCertText" Text="    &lt;No Certificate Chosen&gt;" />
-                <!-- Certificate Context Menu -->
-                <ContextMenu x:Key="CertificateContextMenu" Background="White">
-                    <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="chooseInstalledCert_Click"/>
-                    <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="selectCertBtn_Click"/>
-                    <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" />
-                    <Separator />
-                    <MenuItem Header="Copy" Command="ApplicationCommands.Copy" />
-                </ContextMenu>
-                <!-- End of Certificate Context Menu -->
-            </Grid.Resources>
-            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
-                    Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" IsTabStop="False" IsReadOnly="True"
-                    ContextMenu="{StaticResource CertificateContextMenu}" TextChanged="activeThumbprintBox_TextChanged"/>
-
-            <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="Browse" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
-                    IsDefault="True"/>
-        </Grid>
-        <!-- End of Certificate Chooser -->
-        
-        <!-- Encrypt Button -->
-        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="False" Click="EncryptBtn_Click"
-                Width="175" Height="75" Content="ENCRYPT" FontFamily="MS Office Symbol Bold" FontSize="24" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-        <!-- End of Encrypt Button -->
-    </Grid>
-    
     <!-- Window Design -->
     <Window.Background>
         <LinearGradientBrush StartPoint='0,0' EndPoint='0,1'>
@@ -163,6 +25,49 @@
         <Color x:Key="DisabledControlColor">#FFF2F2F2</Color>
         <Color x:Key="DisabledForegroundColor">#FFBFBFBF</Color>
         <Color x:Key="ControlPressedColor">#FF211AA9</Color>
+        <SolidColorBrush x:Key="RedBrush" Color="#dadcdf"/>
+        <SolidColorBrush x:Key="SolidBorderBrush" Color="#888" />
+        <SolidColorBrush x:Key="GreenBrush" Color="White" />
+        <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#EEE" />
+        <SolidColorBrush x:Key="DisabledBorderBrush" Color="#AAA" />
+        <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#888" />
+
+        <Style TargetType="{x:Type TabItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Grid>
+                            <Border 
+                                Name="Border"
+                                Margin="0,0,-4,0" 
+                                Background="{StaticResource RedBrush}"
+                                BorderBrush="{StaticResource  SolidBorderBrush}" 
+                                BorderThickness="1,1,1,1" 
+                                CornerRadius="2,12,0,0" >
+                                <ContentPresenter x:Name="ContentSite"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    ContentSource="Header"
+                                    Margin="12,2,12,2"
+                                    RecognizesAccessKey="True"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Panel.ZIndex" Value="100" />
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource GreenBrush}" />
+                                <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource DisabledBackgroundBrush}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource DisabledBorderBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource DisabledForegroundBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- Font to use when entering text -->
         <FontFamily x:Key="activeFont">Trebuchet MS</FontFamily>
@@ -242,4 +147,197 @@
         </Style>
     </Window.Resources>
     <!-- End of Window Design -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.25*"/>
+            <ColumnDefinition Width="0.4*" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="88"/>
+            <ColumnDefinition Width="0.75*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="10" />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition Height="1.1*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="520" />
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <!-- Banner Title -->
+            <Label Content="Credential Manager App"
+                  Grid.Column="1" Grid.Row="0" FontFamily="Impact" FontSize="50" 
+                  VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            <!-- End of Banner -->
+
+            <!-- Lock Picture -->
+            <Image x:Name="lockPicture" Grid.Row="0" Source="Media/lock_256.png" Grid.Column="2" HorizontalAlignment="Left"/>
+            <!-- End of Picture -->
+        </Grid>
+
+        <!-- Encryption Area -->
+        <Border Grid.Column="2" Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" BorderThickness="3,2,3,4" CornerRadius="2" BorderBrush="DarkBlue">
+            <TabControl x:Name="tabControl" Background="Transparent" SelectionChanged="TabControl_SelectionChanged">
+                <TabItem x:Name="EncryptTab" Header="ENCRYPT" Background="Transparent">
+                    <Grid x:Name="encAreaGrid">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.55*"/>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="0.75*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="0.1*"/>
+                            <RowDefinition />
+                            <RowDefinition Height="28"/>
+                            <RowDefinition />
+                            <RowDefinition Height="5"/>
+                            <RowDefinition />
+                            <RowDefinition Height="28"/>
+                            <RowDefinition />
+                            <RowDefinition Height="0.1*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.Resources>
+                            <ContextMenu x:Key="HashMenu" Background="White">
+                                <MenuItem Header="Copy" Command="ApplicationCommands.Copy"/>
+                                <MenuItem x:Name="selectAll" Header="Select All" Click="selectAll_Click"/>
+                            </ContextMenu>
+                            <ToolTip x:Key="copyHashBtnTooltip">Copy hash to the clipboard</ToolTip>
+                        </Grid.Resources>
+
+                        <!-- Copy to Clipboard Buttons -->
+                        <Button x:Name="copyUserNamePlainBtn" x:Uid="inputPlainUserName" Grid.Column="3" Grid.Row="2" TabIndex="4" ToolTip="Copy username to the clipboard" Click="CopyBtnClip_Click"/>
+                        <Button x:Name="copyPasswordPlainBtn" x:Uid="inputPlainPasswordBox" Grid.Column="3" Grid.Row="6" TabIndex="5" ToolTip="Copy password to the clipboard" Click="CopyBtnClip_Click" IsEnabled="False"/>
+                        <Button x:Name="copyUsernameHashBtn" x:Uid="outputHashUserName" Grid.Column="7" Grid.Row="2" TabIndex="6" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click"/>
+                        <Button x:Name="copyPasswordHashBtn" x:Uid="outputHashPassword" Grid.Column="7" Grid.Row="6" TabIndex="7" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click"/>
+                        <!-- End of Clipboard Buttons -->
+
+                        <!-- Plain Input Fields -->
+                        <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1" x:Uid="gridTextBox" TextChanged="UserNameBox_TextChanged"
+                                 Text="{Binding Path=DefaultUserNameText}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontStyle="Italic" FontWeight="Thin" FontSize="13"
+                                 GotKeyboardFocus="inputPlainUserName_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainUserName_PreviewMouseLeftButtonDown" LostKeyboardFocus="inputPlainUserName_LostKeyboardFocus"/>
+                        <!--<Button x:Name="inputPlainPasswordBtn" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="inputPlainPasswordBtn_Click"
+                                Content="CLICK TO ENTER CREDENTIAL" FontWeight="Bold" />-->
+                        <PasswordBox x:Name="inputPlainPasswordBox" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
+                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick" PasswordChanged="PassBox_PasswordChanged"
+                                GotKeyboardFocus="inputPlainPasswordBox_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainPasswordBox_PreviewMouseLeftButtonDown"/>
+                        <!--End of Plain Input Fields-->
+
+                        <!-- Hash Output Fields -->
+                        <TextBox x:Name="outputHashUserName" Grid.Column="5" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" IsTabStop="False" x:Uid="gridTextBox"
+                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" FontSize="14" FontWeight="Normal" IsReadOnly="True" ContextMenu="{StaticResource HashMenu}"/>
+                        <TextBox x:Name="outputHashPassword" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" IsTabStop="False" x:Uid="gridTextBox"
+                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" FontSize="14" FontWeight="Normal" IsReadOnly="True" ContextMenu="{StaticResource HashMenu}"/>
+                        <!-- End of Hash Output Fields -->
+
+                        <!-- Labels -->
+                        <Label Content="USERNAME:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="PASSWORD:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="USERNAME HASH:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="PASSWORD HASH:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <!-- End of Labels-->
+                    </Grid>
+                </TabItem>
+                <TabItem x:Name="DecryptTab" Header="DECRYPT" Background="Transparent">
+                    <Grid x:Name="decAreaGrid">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.55*"/>
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="15*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="0.75*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="0.1*"/>
+                            <RowDefinition />
+                            <RowDefinition Height="28"/>
+                            <RowDefinition />
+                            <RowDefinition Height="5"/>
+                            <RowDefinition />
+                            <RowDefinition Height="28"/>
+                            <RowDefinition />
+                            <RowDefinition Height="0.1*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Labels -->
+                        <Label Content="USERNAME HASH:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="PASSWORD HASH:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="USERNAME PLAIN:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="PASSWORD:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <!-- End of Labels-->
+                        
+                        <!-- Output PASSWORD And COPY-->
+                        <PasswordBox x:Name="outputPass" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
+                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" x:Uid="passDecrypt" Focusable="False"/>
+                        <Button x:Name="copyBtnOutPass" Grid.Column="7" Grid.Row="6" Click="passBoxCopyBtn_Click" x:Uid="outputPass"/>
+                        <!-- End of PASSWORD And COPY -->
+
+                        <TextBox x:Name="outputPlainUserName" Grid.Column="5" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" 
+                                 IsTabStop="False" x:Uid="gridTextBox" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" 
+                                 FontSize="14" FontWeight="Normal" IsReadOnly="True"/>
+                        <Button x:Name="copyBtnOutUser" x:Uid="outputPlainUserName"
+                                Grid.Column="7" Grid.Row="2" Click="CopyBtnClip_Click" ToolTip="Copy username to the clipboard" />
+
+                        <TextBox x:Name="inputHashUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TextChanged="Input_TextChanged"
+                                 x:Uid="gridTextBox" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" GotKeyboardFocus="InputHash_GotKeyboardFocus"
+                                 FontSize="14" FontWeight="Normal" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown"/>
+                        <TextBox x:Name="inputHashPassword" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" Height="32" VerticalContentAlignment="Center"
+                                 GotKeyboardFocus="InputHash_GotKeyboardFocus" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown" TextChanged="Input_TextChanged"
+                                 HorizontalContentAlignment="Left" FontSize="14" FontWeight="Normal" x:Uid="gridTextBox"/>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Border>
+        <!-- End of Encryption Area -->
+
+        <!-- Certificate Chooser -->
+        <Grid Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" x:Name="CertificateChooser">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="0.25*" />
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
+                <TextBox x:Key="DefCertText" Text="    &lt;No Certificate Chosen&gt;" />
+                <!-- Certificate Context Menu -->
+                <ContextMenu x:Key="CertificateContextMenu" Background="White">
+                    <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="chooseInstalledCert_Click"/>
+                    <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="selectCertBtn_Click"/>
+                    <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" />
+                    <Separator />
+                    <MenuItem Header="Copy" Command="ApplicationCommands.Copy" />
+                </ContextMenu>
+                <!-- End of Certificate Context Menu -->
+            </Grid.Resources>
+            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
+                    Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" IsTabStop="False" IsReadOnly="True"
+                    ContextMenu="{StaticResource CertificateContextMenu}" TextChanged="activeThumbprintBox_TextChanged"/>
+
+            <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="Browse" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
+                    IsDefault="True"/>
+        </Grid>
+        <!-- End of Certificate Chooser -->
+
+        <!-- Encrypt Button -->
+        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="False" Click="EncryptBtn_Click"
+                Width="175" Height="75" Content="ENCRYPT" FontFamily="MS Office Symbol Bold" FontSize="24" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <!-- End of Encrypt Button -->
+    </Grid>
 </Window>

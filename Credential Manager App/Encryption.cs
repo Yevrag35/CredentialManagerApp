@@ -18,6 +18,7 @@ namespace Credential_Manager_App
     {
         #region Properties/Fields
         private X509Certificate2 _cert;
+        private byte[] workingContent;
         public string ActiveThumbprint
         {
             get
@@ -118,11 +119,36 @@ namespace Credential_Manager_App
         public string PlainDecrypt(byte[] encBytes)
         {
             string base64 = Encoding.UTF8.GetString(encBytes);      // back to Base64 string
-            byte[] content = Convert.FromBase64String(base64);      // get byte[] of Base64 string
+            return PlainDecrypt(base64);
+        }
+        public string PlainDecrypt(string base64)
+        {
+            try
+            {
+                workingContent = Convert.FromBase64String(base64);
+            }
+            catch (FormatException e)
+            {
+                MessageBox.Show(e.Message + Environment.NewLine + Environment.NewLine + base64, e.GetType().FullName, MessageBoxButton.OK, MessageBoxImage.Error);
+                return String.Empty;
+            }
             EnvelopedCms cms = new EnvelopedCms();
-            cms.Decode(content);
-            cms.Decrypt();
-            return Encoding.UTF8.GetString(cms.ContentInfo.Content);
+            try
+            {
+                cms.Decode(workingContent);
+                cms.Decrypt();
+                return Encoding.UTF8.GetString(cms.ContentInfo.Content);
+            }
+            catch (CryptographicException e)
+            {
+                MessageBox.Show("Failure to decode the base64 string!" + Environment.NewLine + Environment.NewLine + base64, e.GetType().FullName, MessageBoxButton.OK, MessageBoxImage.Error);
+                return String.Empty;
+            }
+            finally
+            {
+                workingContent = null;
+            }
+            
         }
 
         #endregion
