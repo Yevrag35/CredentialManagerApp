@@ -3,6 +3,7 @@ using Ookii.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
@@ -29,7 +30,7 @@ namespace Credential_Manager_App
     {
         #region MainWindow - Properties
         public AppSettings _app;
-        public string StoredCert { get { return (string)_app.Properties["EncryptionCertificate"]; } }
+        public object StoredCert;
         public Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
@@ -87,12 +88,13 @@ namespace Credential_Manager_App
         public MainWindow()
         {
             _app = new AppSettings(GenerateSettingsDictionary());
+            StoredCert = _app.Properties["EncryptionCertificate"];
             _defu = defUserText;
             _enc = new Encryption();
             InitializeComponent();
-            if (!String.IsNullOrEmpty(StoredCert))
+            if (!String.IsNullOrEmpty((string)StoredCert))
             {
-                CertificateText = StoredCert;
+                CertificateText = (string)StoredCert;
                 ChangeCertTextStyle(CertBoxStyles.Good, ((MainWindow)Application.Current.MainWindow).activeThumbprintBox);
             }
             LoadWindowDimensions();
@@ -185,14 +187,19 @@ namespace Credential_Manager_App
             _app.SetPropertyValue("EncryptionCertificate", thumbprint);
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (!String.IsNullOrEmpty(_enc.ActiveThumbprint) && _enc.ActiveThumbprint != StoredCert)
+            if (!_enc.ActiveThumbprint.Equals(StoredCert))
             {
-                MessageBoxResult question = MessageBox.Show("Would you like to save the current certificate for next time?", "Before you go...", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                MessageBoxResult question = MessageBox.Show("Would you like to save the current certificate settings?", "Before you go...", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
                 if (question == MessageBoxResult.Yes)
                 {
                     SaveCertThumbprint(_enc.ActiveThumbprint);
+                }
+                else if (question == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
                 }
             }
             SaveWindowDimensions();
@@ -597,7 +604,6 @@ namespace Credential_Manager_App
         private void clearCertificate_Click(object sender, RoutedEventArgs e)
         {
             ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
-            _app.SetPropertyValue("EncryptionCertificate", String.Empty);
             CertificateText = String.Empty;
         }
         public void ViewCertificate_Click(object sender, RoutedEventArgs e)
