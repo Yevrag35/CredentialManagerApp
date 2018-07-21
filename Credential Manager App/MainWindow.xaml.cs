@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
@@ -30,12 +31,27 @@ namespace Credential_Manager_App
     {
         #region MainWindow - Properties
         public AppSettings _app;
+        public string AppNameAndVersion
+        {
+            get
+            {
+                AppDomain appId = AppDomain.CurrentDomain;
+                string ver = FileVersionInfo.GetVersionInfo(appId.BaseDirectory + appId.FriendlyName).FileVersion;
+
+                return appId.FriendlyName.Replace(".exe", String.Empty) + " - v" + ver;
+            }
+            set
+            {
+                AppNameAndVersion = value;
+            }
+        }
         public object StoredCert;
         public Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
         private string un;
         private string ps;
+
         private const string defUserText = @"<Enter the username>";
         private const string defCertText = @"    <No Certificate Chosen>";
         private string CertificateText

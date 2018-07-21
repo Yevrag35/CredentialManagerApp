@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Credential_Manager_App"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen"
         DataContext="{Binding RelativeSource={RelativeSource Self}}" Closing="Window_Closing" StateChanged="Window_StateChanged"
-        Title="Credential Manager App" Height="450" Width="800" MinHeight="320" MinWidth="690">
+        Title="{Binding Path=AppNameAndVersion}" Height="450" Width="800" MinHeight="320" MinWidth="690">
     <!-- Window Design -->
     <Window.Background>
         <LinearGradientBrush StartPoint='0,0' EndPoint='0,1'>
