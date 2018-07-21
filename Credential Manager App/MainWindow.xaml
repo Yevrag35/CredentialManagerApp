@@ -309,7 +309,7 @@
         <!-- End of Encryption Area -->
 
         <!-- Certificate Chooser -->
-        <Grid Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3" x:Name="CertificateChooser">
+        <Grid x:Name="certGridArea" Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition Width="0.25*" />
@@ -321,6 +321,8 @@
                     <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="chooseInstalledCert_Click"/>
                     <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="selectCertBtn_Click"/>
                     <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" />
+                    <Separator />
+                    <MenuItem x:Name="viewCertificateCTX" Header="View Certificate" Click="ViewCertificate_Click" />
                     <Separator />
                     <MenuItem Header="Copy" Command="ApplicationCommands.Copy" />
                 </ContextMenu>

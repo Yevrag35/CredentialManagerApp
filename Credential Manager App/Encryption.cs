@@ -55,6 +55,11 @@ namespace Credential_Manager_App
             store.Dispose();
         }
 
+        public X509Certificate2 GetActiveCertificate()
+        {
+            return _cert;
+        }
+
         public void ClearCertificate()
         {
             _cert.Dispose();
@@ -126,29 +131,19 @@ namespace Credential_Manager_App
             try
             {
                 workingContent = Convert.FromBase64String(base64);
-            }
-            catch (FormatException e)
-            {
-                MessageBox.Show(e.Message + Environment.NewLine + Environment.NewLine + base64, e.GetType().FullName, MessageBoxButton.OK, MessageBoxImage.Error);
-                return String.Empty;
-            }
-            EnvelopedCms cms = new EnvelopedCms();
-            try
-            {
+                EnvelopedCms cms = new EnvelopedCms();
                 cms.Decode(workingContent);
                 cms.Decrypt();
                 return Encoding.UTF8.GetString(cms.ContentInfo.Content);
             }
-            catch (CryptographicException e)
+            catch (Exception e)
             {
-                MessageBox.Show("Failure to decode the base64 string!" + Environment.NewLine + Environment.NewLine + base64, e.GetType().FullName, MessageBoxButton.OK, MessageBoxImage.Error);
-                return String.Empty;
+                throw new CryptographicException(e.Message + Environment.NewLine + Environment.NewLine + base64);
             }
             finally
             {
                 workingContent = null;
             }
-            
         }
 
         #endregion

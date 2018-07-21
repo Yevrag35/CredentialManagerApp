@@ -8,11 +8,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Credential Manager App")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("An application for quickly encrypting and decrypting sensitive text using certificate-based encryption methods.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Yevrag35, LLC.")]
 [assembly: AssemblyProduct("Credential Manager App")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright © 2018 Yevrag35, LLC.  All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -53,3 +53,6 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: Guid("d2aa6666-9b67-4543-ad71-aec2ac909679")]
+[assembly: NeutralResourcesLanguage("en-US")]
+

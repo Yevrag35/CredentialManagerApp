@@ -76,7 +76,7 @@ namespace Credential_Manager_App {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/CredentialManagerApp;component/installedcertselector.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Credential Manager App;component/installedcertselector.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\InstalledCertSelector.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

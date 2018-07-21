@@ -2,8 +2,10 @@
 using Ookii.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -32,6 +34,8 @@ namespace Credential_Manager_App
         private FontFamily _defFont;
         private string _defu;
         private bool check;
+        private string un;
+        private string ps;
         private const string defUserText = @"<Enter the username>";
         private const string defCertText = @"    <No Certificate Chosen>";
         private string CertificateText
@@ -312,24 +316,48 @@ namespace Credential_Manager_App
                 un = inputPlainUserName.Text;
                 ps = inputPlainPasswordBox.Password;
             }
-            string base64 = _enc.EncryptStringToString(ps);
-            string base64User = _enc.EncryptStringToString(un);
-            outputHashPassword.Text = base64;
-            inputPlainUserName.Text = un;
-            outputHashUserName.Text = base64User;
+            if (!String.IsNullOrEmpty(ps))
+            {
+                outputHashPassword.Text = _enc.EncryptStringToString(ps);
+            }
+            if (!String.IsNullOrEmpty(un))
+            {
+                outputHashUserName.Text = _enc.EncryptStringToString(un);
+            }
             eb.Content = "RESET";
             eb.CommandParameter = EncryptButtonBehavior.Reset;
         }
         private void EncryptButton_Decrypt(object sender)
         {
             Button eb = (Button)sender;
-            outputPlainUserName.Text = _enc.PlainDecrypt(inputHashUserName.Text);
-            outputPass.Password = _enc.PlainDecrypt(inputHashPassword.Text);
-            if (!String.IsNullOrEmpty(outputPass.Password) && !String.IsNullOrEmpty(outputPlainUserName.Text))
+            try
             {
-                eb.Content = "RESET";
-                eb.CommandParameter = EncryptButtonBehavior.Reset;
+                if (!String.IsNullOrEmpty(inputHashUserName.Text))
+                {
+                    un = _enc.PlainDecrypt(inputHashUserName.Text);
+                }
+                if (!String.IsNullOrEmpty(inputHashPassword.Text))
+                {
+                    ps = _enc.PlainDecrypt(inputHashPassword.Text);
+                }
             }
+            catch (Exception e)
+            { 
+                MessageBox.Show(e.Message, e.GetType().FullName, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            if (!String.IsNullOrEmpty(un))
+            {
+                outputHashUserName.Text = un;
+                un = null;
+            }
+            if (!String.IsNullOrEmpty(ps))
+            {
+                outputHashPassword.Text = ps;
+                ps = null;
+            }
+            eb.Content = "RESET";
+            eb.CommandParameter = EncryptButtonBehavior.Reset;
         }
         private void EncryptButton_Reset(object sender, TabControl tbc)
         {
@@ -440,8 +468,7 @@ namespace Credential_Manager_App
         private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox tb = (TextBox)sender;
-            if (tb.Text != defUserText && !String.IsNullOrEmpty(inputPlainPasswordBox.Password) &&
-                activeThumbprintBox.Text != defCertText)
+            if (tb.Text != defUserText && !String.IsNullOrEmpty(tb.Text) && activeThumbprintBox.Text != defCertText)
             {
                 ChangeEncryptButtonStatus(EncryptButtonStatus.On);
             }
@@ -474,7 +501,7 @@ namespace Credential_Manager_App
         private void PassBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             PasswordBox pb = (PasswordBox)sender;
-            if (!String.IsNullOrEmpty(pb.Password) && !String.IsNullOrEmpty(inputPlainUserName.Text) &&
+            if ((!String.IsNullOrEmpty(pb.Password) || !String.IsNullOrEmpty(inputPlainUserName.Text)) &&
                 activeThumbprintBox.Text != defCertText)
             {
                 ChangeEncryptButtonStatus(EncryptButtonStatus.On);
@@ -509,12 +536,9 @@ namespace Credential_Manager_App
         private void Input_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox tb = (TextBox)sender;
-            if (!String.IsNullOrEmpty(tb.Text))
+            if (!String.IsNullOrEmpty(tb.Text) && !String.IsNullOrEmpty(activeThumbprintBox.Text))
             {
-                if (!String.IsNullOrEmpty(inputHashUserName.Text) && !String.IsNullOrEmpty(inputHashPassword.Text))
-                {
-                    ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-                }
+                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
             }
         }
 
@@ -575,6 +599,11 @@ namespace Credential_Manager_App
             ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
             _app.SetPropertyValue("EncryptionCertificate", String.Empty);
             CertificateText = String.Empty;
+        }
+        public void ViewCertificate_Click(object sender, RoutedEventArgs e)
+        {
+            CertListItem cert = new CertListItem(_enc.GetActiveCertificate());
+            cert.ViewCertificate();
         }
 
         #endregion
