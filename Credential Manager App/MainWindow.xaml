@@ -186,8 +186,8 @@
         <!-- Encryption Area -->
         <Border Grid.Column="2" Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" BorderThickness="3,2,3,4" CornerRadius="2" BorderBrush="DarkBlue">
             <TabControl x:Name="tabControl" Background="Transparent" SelectionChanged="TabControl_SelectionChanged">
-                <TabItem x:Name="EncryptTab" Header="ENCRYPT" Background="Transparent">
-                    <Grid x:Name="encAreaGrid">
+                <TabItem x:Name="EncryptTab" Header="ENCRYPT" Background="Transparent" x:Uid="encAreaGrid">
+                    <Grid x:Name="encAreaGrid" x:Uid="EncryptTab">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="0.55*"/>
                             <ColumnDefinition Width="15*"/>
@@ -226,14 +226,14 @@
                         <!-- End of Clipboard Buttons -->
 
                         <!-- Plain Input Fields -->
-                        <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1" x:Uid="gridTextBox" TextChanged="UserNameBox_TextChanged"
+                        <TextBox x:Name="inputPlainUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="1" x:Uid="gridTextBoxInput"
                                  Text="{Binding Path=DefaultUserNameText}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontStyle="Italic" FontWeight="Thin" FontSize="13"
                                  GotKeyboardFocus="inputPlainUserName_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainUserName_PreviewMouseLeftButtonDown" LostKeyboardFocus="inputPlainUserName_LostKeyboardFocus"/>
                         <!--<Button x:Name="inputPlainPasswordBtn" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="inputPlainPasswordBtn_Click"
                                 Content="CLICK TO ENTER CREDENTIAL" FontWeight="Bold" />-->
                         <PasswordBox x:Name="inputPlainPasswordBox" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
-                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick" PasswordChanged="PassBox_PasswordChanged"
+                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick" x:Uid="gridTextBoxInputPass"
                                 GotKeyboardFocus="inputPlainPasswordBox_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainPasswordBox_PreviewMouseLeftButtonDown"/>
                         <!--End of Plain Input Fields-->
 
@@ -245,15 +245,15 @@
                         <!-- End of Hash Output Fields -->
 
                         <!-- Labels -->
-                        <Label Content="USERNAME:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
-                        <Label Content="PASSWORD:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="USERNAME:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputPlainUserName"/>
+                        <Label Content="PASSWORD:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputPlainPasswordBox"/>
                         <Label Content="USERNAME HASH:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
                         <Label Content="PASSWORD HASH:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
                         <!-- End of Labels-->
                     </Grid>
                 </TabItem>
-                <TabItem x:Name="DecryptTab" Header="DECRYPT" Background="Transparent">
-                    <Grid x:Name="decAreaGrid">
+                <TabItem x:Name="DecryptTab" Header="DECRYPT" Background="Transparent" x:Uid="decAreaGrid">
+                    <Grid x:Name="decAreaGrid" x:Uid="DecryptTab">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="0.55*"/>
                             <ColumnDefinition Width="15*"/>
@@ -278,8 +278,8 @@
                         </Grid.RowDefinitions>
                         
                         <!-- Labels -->
-                        <Label Content="USERNAME HASH:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
-                        <Label Content="PASSWORD HASH:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
+                        <Label Content="USERNAME HASH:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputHashUserName"/>
+                        <Label Content="PASSWORD HASH:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputHashPassword"/>
                         <Label Content="USERNAME PLAIN:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
                         <Label Content="PASSWORD:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
                         <!-- End of Labels-->
@@ -287,21 +287,23 @@
                         <!-- Output PASSWORD And COPY-->
                         <PasswordBox x:Name="outputPass" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
                                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" x:Uid="passDecrypt" Focusable="False"/>
+                        
                         <Button x:Name="copyBtnOutPass" Grid.Column="7" Grid.Row="6" Click="passBoxCopyBtn_Click" x:Uid="outputPass"/>
                         <!-- End of PASSWORD And COPY -->
 
                         <TextBox x:Name="outputPlainUserName" Grid.Column="5" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" 
                                  IsTabStop="False" x:Uid="gridTextBox" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" 
                                  FontSize="14" FontWeight="Normal" IsReadOnly="True"/>
-                        <Button x:Name="copyBtnOutUser" x:Uid="outputPlainUserName"
-                                Grid.Column="7" Grid.Row="2" Click="CopyBtnClip_Click" ToolTip="Copy username to the clipboard" />
+                        
+                        <Button x:Name="copyBtnOutUser" x:Uid="outputPlainUserName" Grid.Column="7" Grid.Row="2" Click="CopyBtnClip_Click" ToolTip="Copy username to the clipboard" />
 
-                        <TextBox x:Name="inputHashUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TextChanged="Input_TextChanged"
-                                 x:Uid="gridTextBox" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" GotKeyboardFocus="InputHash_GotKeyboardFocus"
+                        <TextBox x:Name="inputHashUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32"
+                                 x:Uid="gridTextBoxInput" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" GotKeyboardFocus="InputHash_GotKeyboardFocus"
                                  FontSize="14" FontWeight="Normal" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown"/>
+                        
                         <TextBox x:Name="inputHashPassword" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" Height="32" VerticalContentAlignment="Center"
-                                 GotKeyboardFocus="InputHash_GotKeyboardFocus" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown" TextChanged="Input_TextChanged"
-                                 HorizontalContentAlignment="Left" FontSize="14" FontWeight="Normal" x:Uid="gridTextBox"/>
+                                 GotKeyboardFocus="InputHash_GotKeyboardFocus" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown"
+                                 HorizontalContentAlignment="Left" FontSize="14" FontWeight="Normal" x:Uid="gridTextBoxInput"/>
                     </Grid>
                 </TabItem>
             </TabControl>
@@ -329,8 +331,8 @@
                 <!-- End of Certificate Context Menu -->
             </Grid.Resources>
             <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
-                    Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" IsTabStop="False" IsReadOnly="True"
-                    ContextMenu="{StaticResource CertificateContextMenu}" TextChanged="activeThumbprintBox_TextChanged"/>
+                    Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" IsTabStop="False" IsReadOnly="True" TextChanged="activeThumbprintBox_TextChanged"
+                    ContextMenu="{StaticResource CertificateContextMenu}"/>
 
             <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="Browse" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
                     IsDefault="True"/>
@@ -338,7 +340,7 @@
         <!-- End of Certificate Chooser -->
 
         <!-- Encrypt Button -->
-        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" IsEnabled="False" Click="EncryptBtn_Click"
+        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" Click="EncryptBtn_Click"
                 Width="175" Height="75" Content="ENCRYPT" FontFamily="MS Office Symbol Bold" FontSize="24" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
         <!-- End of Encrypt Button -->
     </Grid>

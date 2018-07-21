@@ -34,7 +34,6 @@ namespace Credential_Manager_App
         public Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
-        private bool check;
         private string un;
         private string ps;
         private const string defUserText = @"<Enter the username>";
@@ -116,71 +115,70 @@ namespace Credential_Manager_App
             };
             return setts;
         }
-        private bool AllInfoPresent(TabItem ti)
+        private Dictionary<string, object> AllInfoPresent(TabItem ti)
         {
-            switch (ti.Name)
+            bool result = false;
+            string stillNeed;
+            // First check if Certificate is defined...
+            if (activeThumbprintBox != null && activeThumbprintBox.Text != defCertText)
             {
-                case "EncryptTab":
-                    if (String.IsNullOrEmpty(inputPlainPasswordBox.Password) || String.IsNullOrEmpty(inputPlainUserName.Text) ||
-                        String.IsNullOrEmpty(outputHashPassword.Text) || String.IsNullOrEmpty(outputHashUserName.Text))
-                    {
-                        check = false;
-                    }
-                    else if (String.IsNullOrEmpty(activeThumbprintBox.Text))
-                    {
-                        check = false;
-                    }
-                    else
-                    {
-                        check = true;
-                    }
-                    break;
-                case "DecryptTab":
-                    if (String.IsNullOrEmpty(inputHashPassword.Text) || String.IsNullOrEmpty(inputHashUserName.Text) ||
-                        String.IsNullOrEmpty(outputPlainUserName.Text) || String.IsNullOrEmpty(outputPass.Password))
-                    {
-                        check = false;
-                    }
-                    else if (String.IsNullOrEmpty(activeThumbprintBox.Text))
-                    {
-                        check = false;
-                    }
-                    else
-                    {
-                        check = true;
-                    }
-                    break;
-            }
-            bool localChck = check;
-            check = false;
-            return localChck;
-        }
-
-        private enum EncryptButtonStatus : int
-        {
-            Off = 0,
-            On = 1
-        }
-
-        private void ChangeEncryptButtonStatus(EncryptButtonStatus status)
-        {
-            if (encryptBtn != null)
-            {
-                switch (status)
+                // Now, check if the requisite text boxes are filled in...
+                stillNeed = "Username or Password";
+                string gridName = ti.Uid;
+                Grid gotcha = (Grid)FindName(gridName);
+                List<UIElement> allElms = gotcha.Children.OfType<UIElement>().Cast<UIElement>().ToList();
+                IEnumerable<UIElement> gridBoxes = allElms.Where(x => x.Uid.Contains("gridTextBoxInput"));
+                for (int i = 0; i < gridBoxes.Count(); i++)
                 {
-                    case EncryptButtonStatus.Off:
-                        encryptBtn.IsDefault = false;
-                        encryptBtn.IsEnabled = false;
-                        selectCertBtn.IsDefault = true;
-                        break;
-                    case EncryptButtonStatus.On:
-                        encryptBtn.IsEnabled = true;
-                        selectCertBtn.IsDefault = false;
-                        encryptBtn.IsDefault = true;
-                        break;
+                    UIElement item = gridBoxes.ToList()[i];
+                    Type itemType = item.GetType();
+                    if (itemType == typeof(TextBox) && !String.IsNullOrEmpty(((TextBox)item).Text)
+                        && ((TextBox)item).Text != defUserText)
+                    {
+                        result = true;
+                    }
+                    else if (itemType == typeof(PasswordBox) && !String.IsNullOrEmpty(((PasswordBox)item).Password))
+                    {
+                        result = true;
+                    }
                 }
             }
+            else
+            {
+                stillNeed = "Certificate";
+            }
+            return new Dictionary<string, object>()
+            {
+                { "Result", result },
+                { "FailedItems", stillNeed }
+            };
         }
+
+        //private enum EncryptButtonStatus : int
+        //{
+        //    Off = 0,
+        //    On = 1
+        //}
+
+        //private void ChangeEncryptButtonStatus(EncryptButtonStatus status)
+        //{
+        //    if (encryptBtn != null)
+        //    {
+        //        switch (status)
+        //        {
+        //            case EncryptButtonStatus.Off:
+        //                encryptBtn.IsDefault = false;
+        //                encryptBtn.IsEnabled = false;
+        //                selectCertBtn.IsDefault = true;
+        //                break;
+        //            case EncryptButtonStatus.On:
+        //                encryptBtn.IsEnabled = true;
+        //                selectCertBtn.IsDefault = false;
+        //                encryptBtn.IsDefault = true;
+        //                break;
+        //        }
+        //    }
+        //}
 
         private void SaveCertThumbprint(string thumbprint)
         {
@@ -290,20 +288,59 @@ namespace Credential_Manager_App
             Decrypt = 2
         }
 
+        private Dictionary<string, object> ResetFields(int tabIndex)
+        {
+            switch (tabIndex)
+            {
+                case 0:
+                    inputPlainUserName.Text = String.Empty;
+                    inputPlainPasswordBox.Password = String.Empty;
+                    outputHashUserName.Text = String.Empty;
+                    outputHashPassword.Text = String.Empty;
+                    return new Dictionary<string, object>()
+                    {
+                        { "Content", "ENCRYPT" },
+                        { "Behavior", EncryptButtonBehavior.Encrypt }
+                    };
+                case 1:
+                    inputHashUserName.Text = String.Empty;
+                    inputHashPassword.Text = String.Empty;
+                    outputPlainUserName.Text = String.Empty;
+                    outputPass.Password = String.Empty;
+                    return new Dictionary<string, object>()
+                    {
+                        { "Content", "DECRYPT" },
+                        { "Behavior", EncryptButtonBehavior.Decrypt }
+                    };
+                default:
+                    return null;
+            }
+        }
         private void EncryptBtn_Click(object sender, RoutedEventArgs e)
         {
             Button eb = (Button)sender;
-            switch (eb.CommandParameter)
+            Dictionary<string, object> Check = AllInfoPresent((TabItem)tabControl.SelectedItem);
+            if (Check["Result"].Equals(true))
             {
-                case EncryptButtonBehavior.Encrypt:
-                    EncryptButton_Encrypt(eb);
-                    break;
-                case EncryptButtonBehavior.Reset:
-                    EncryptButton_Reset(eb, tabControl);
-                    break;
-                case EncryptButtonBehavior.Decrypt:
-                    EncryptButton_Decrypt(eb);
-                    break;
+                switch (eb.CommandParameter)
+                {
+                    case EncryptButtonBehavior.Encrypt:
+                        EncryptButton_Encrypt(eb);
+                        break;
+                    case EncryptButtonBehavior.Reset:
+                        EncryptButton_Reset(eb, tabControl.SelectedIndex);
+                        break;
+                    case EncryptButtonBehavior.Decrypt:
+                        EncryptButton_Decrypt(eb);
+                        break;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Some fields are still blank!  Populate the following fields and try again." +
+                    Environment.NewLine + Environment.NewLine +
+                    Check["FailedItems"], "WOAH!", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
         }
         private void EncryptButton_Encrypt(object sender, Dictionary<string, object> credResult = null)
@@ -366,31 +403,13 @@ namespace Credential_Manager_App
             eb.Content = "RESET";
             eb.CommandParameter = EncryptButtonBehavior.Reset;
         }
-        private void EncryptButton_Reset(object sender, TabControl tbc)
+        private void EncryptButton_Reset(object sender, int selectedIndex)
         {
             Button eb = (Button)sender;
             // Do you shit here!
-            switch (tbc.SelectedIndex)
-            {
-                case 0:
-                    inputPlainUserName.Text = String.Empty;
-                    inputPlainPasswordBox.Password = String.Empty;
-                    outputHashUserName.Text = String.Empty;
-                    outputHashPassword.Text = String.Empty;
-                    eb.Content = "ENCRYPT";
-                    eb.CommandParameter = EncryptButtonBehavior.Encrypt;
-                    eb.IsEnabled = false;
-                    break;
-                case 1:
-                    inputHashUserName.Text = String.Empty;
-                    inputHashPassword.Text = String.Empty;
-                    outputPlainUserName.Text = String.Empty;
-                    outputPass.Password = String.Empty;
-                    eb.Content = "DECRYPT";
-                    eb.CommandParameter = EncryptButtonBehavior.Decrypt;
-                    break;
-            }
-                
+             Dictionary<string, object> result = ResetFields(selectedIndex);
+            eb.Content = result["Content"];
+            eb.CommandParameter = result["Behavior"];
         }
 
         #endregion
@@ -415,14 +434,12 @@ namespace Credential_Manager_App
                     cb.FontWeight = FontWeights.Normal;
                     break;
             }
-            
         }
         private void activeThumbprintBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox tb = (TextBox)sender;
             if (tb.Text == defCertText)
             {
-                ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
                 ChangeCertTextStyle(CertBoxStyles.Bad, tb);
             }
             else
@@ -472,18 +489,18 @@ namespace Credential_Manager_App
                 tb.Focus();
             }
         }
-        private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox tb = (TextBox)sender;
-            if (tb.Text != defUserText && !String.IsNullOrEmpty(tb.Text) && activeThumbprintBox.Text != defCertText)
-            {
-                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-            }
-            else
-            {
-                ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
-            }
-        }
+        //private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
+        //{
+        //    TextBox tb = (TextBox)sender;
+        //    if (tb.Text != defUserText && !String.IsNullOrEmpty(tb.Text) && activeThumbprintBox.Text != defCertText)
+        //    {
+        //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+        //    }
+        //    else
+        //    {
+        //        ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
+        //    }
+        //}
 
         #endregion
 
@@ -505,19 +522,19 @@ namespace Credential_Manager_App
                 pb.Focus();
             }
         }
-        private void PassBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            PasswordBox pb = (PasswordBox)sender;
-            if ((!String.IsNullOrEmpty(pb.Password) || !String.IsNullOrEmpty(inputPlainUserName.Text)) &&
-                activeThumbprintBox.Text != defCertText)
-            {
-                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-            }
-            else
-            {
-                ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
-            }
-        }
+        //private void PassBox_PasswordChanged(object sender, RoutedEventArgs e)
+        //{
+        //    PasswordBox pb = (PasswordBox)sender;
+        //    if ((!String.IsNullOrEmpty(pb.Password) || !String.IsNullOrEmpty(inputPlainUserName.Text)) &&
+        //        activeThumbprintBox.Text != defCertText)
+        //    {
+        //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+        //    }
+        //    else
+        //    {
+        //        ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
+        //    }
+        //}
 
         #endregion
 
@@ -540,14 +557,14 @@ namespace Credential_Manager_App
             }
         }
 
-        private void Input_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox tb = (TextBox)sender;
-            if (!String.IsNullOrEmpty(tb.Text) && !String.IsNullOrEmpty(activeThumbprintBox.Text))
-            {
-                ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-            }
-        }
+        //private void Input_TextChanged(object sender, TextChangedEventArgs e)
+        //{
+        //    TextBox tb = (TextBox)sender;
+        //    if (!String.IsNullOrEmpty(tb.Text) && !String.IsNullOrEmpty(activeThumbprintBox.Text))
+        //    {
+        //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
+        //    }
+        //}
 
         #endregion
 
@@ -593,17 +610,12 @@ namespace Credential_Manager_App
                 Dispatcher.Invoke(() =>
                 {
                     CertificateText = certSelector.SelectedCert.SHA1Thumbprint;
-                    if (!String.IsNullOrEmpty(inputPlainPasswordBox.Password) && !String.IsNullOrEmpty(inputPlainUserName.Text))
-                    {
-                        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-                    }
                 });
             }
         }
 
         private void clearCertificate_Click(object sender, RoutedEventArgs e)
         {
-            ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
             CertificateText = String.Empty;
         }
         public void ViewCertificate_Click(object sender, RoutedEventArgs e)
@@ -663,45 +675,27 @@ namespace Credential_Manager_App
             switch (ti.Name)
             {
                 case "EncryptTab":
-                    if (!AllInfoPresent(ti))
+                    if (!String.IsNullOrEmpty(outputHashUserName.Text) || !String.IsNullOrEmpty(outputHashPassword.Text))
                     {
-                        if (String.IsNullOrEmpty(inputPlainPasswordBox.Password) || String.IsNullOrEmpty(inputPlainUserName.Text))
-                        {
-                            encryptBtn.IsEnabled = false;
-                        }
-                        else
-                        {
-                            ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-                        }
+                        encryptBtn.Content = "RESET";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
+                    }
+                    else
+                    {
                         encryptBtn.Content = "ENCRYPT";
                         encryptBtn.CommandParameter = EncryptButtonBehavior.Encrypt;
                     }
-                    else
-                    {
-                        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-                        encryptBtn.Content = "RESET";
-                        encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
-                    }
                     break;
                 case "DecryptTab":
-                    if (!AllInfoPresent(ti))
+                    if (!String.IsNullOrEmpty(outputPlainUserName.Text) || !String.IsNullOrEmpty(outputPass.Password))
                     {
-                        if (String.IsNullOrEmpty(inputHashPassword.Text) || String.IsNullOrEmpty(inputHashUserName.Text))
-                        {
-                            ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
-                        }
-                        else
-                        {
-                            ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-                        }
-                        encryptBtn.Content = "DECRYPT";
-                        encryptBtn.CommandParameter = EncryptButtonBehavior.Decrypt;
+                        encryptBtn.Content = "RESET";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
                     }
                     else
                     {
-                        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-                        encryptBtn.Content = "RESET";
-                        encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
+                        encryptBtn.Content = "DECRYPT";
+                        encryptBtn.CommandParameter = EncryptButtonBehavior.Decrypt;
                     }
                     break;
             }
