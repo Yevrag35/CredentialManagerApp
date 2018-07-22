@@ -408,12 +408,12 @@ namespace Credential_Manager_App
             }
             if (!String.IsNullOrEmpty(un))
             {
-                outputHashUserName.Text = un;
+                outputPlainUserName.Text = un;
                 un = null;
             }
             if (!String.IsNullOrEmpty(ps))
             {
-                outputHashPassword.Text = ps;
+                outputPass.Password = ps;
                 ps = null;
             }
             eb.Content = "RESET";
