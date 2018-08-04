@@ -20,7 +20,7 @@ namespace Credential_Manager_App
     /// </summary>
     public partial class CertSelector : Window
     {
-        public CertListItem SelectedCert;
+        internal CertListItem SelectedCert;
         private ObservableCollection<CertListItem> certCol;
         public CertSelector()
         {
@@ -36,13 +36,9 @@ namespace Credential_Manager_App
             if (selItem == null)
             {
                 MessageBox.Show("You must select/highlight 1 certificate to proceed.", "ERROR!", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
-            else
-            {
-                SelectedCert = selItem as CertListItem;
-            }
-            DialogResult = true;
-            Close();
+            CommitToCert(selItem as CertListItem);
         }
 
         private void cancelBtn_Click(object sender, RoutedEventArgs e)
@@ -56,6 +52,23 @@ namespace Credential_Manager_App
         {
             CertListItem selectedCert = listOCerts.SelectedItem as CertListItem;
             selectedCert.ViewCertificate();
+        }
+
+        private void CommitToCert(CertListItem cert)
+        {
+            SelectedCert = cert;
+            DialogResult = true;
+            Close();
+        }
+
+        private void pfxInstallerBtn_Click(object sender, RoutedEventArgs e)
+        {
+            X509Certificate2 cert = SharedPrompt.PfxPrompt();
+            if (cert != null)
+            {
+                CertListItem certListItem = new CertListItem(cert);
+                CommitToCert(certListItem);
+            }
         }
     }
 }

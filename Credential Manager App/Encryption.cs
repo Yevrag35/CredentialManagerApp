@@ -14,7 +14,7 @@ using System.Windows;
 
 namespace Credential_Manager_App
 {
-    public class Encryption
+    internal class Encryption
     {
         #region Properties/Fields
         private X509Certificate2 _cert;
@@ -37,12 +37,12 @@ namespace Credential_Manager_App
         #endregion
 
         #region Constructors
-        public Encryption() { }
+        internal Encryption() { }
 
         #endregion
 
         #region Certificate Methods
-        public void SetActiveCertificate(string SHA1Thumbprint)
+        internal void SetActiveCertificate(string SHA1Thumbprint)
         {
             X509Store store = new X509Store(StoreLocation.CurrentUser);
             store.Open(OpenFlags.MaxAllowed);
@@ -55,18 +55,18 @@ namespace Credential_Manager_App
             store.Dispose();
         }
 
-        public X509Certificate2 GetActiveCertificate()
+        internal X509Certificate2 GetActiveCertificate()
         {
             return _cert;
         }
 
-        public void ClearCertificate()
+        internal void ClearCertificate()
         {
             _cert.Dispose();
             _cert = null;
         }
 
-        public string GetCertificateThumbprint(string fileName)
+        internal string GetCertificateThumbprint(string fileName)
         {
             X509Certificate2 cert = new X509Certificate2(fileName);
             return cert.Thumbprint;
@@ -74,8 +74,31 @@ namespace Credential_Manager_App
 
         #endregion
 
+        #region PKCS#12 Methods
+        internal static X509Certificate2 InstallPfx(string pathToCert, SecureString securePass)
+        {
+            X509Certificate2 cert = new X509Certificate2(pathToCert, securePass);
+            if (cert != null)
+            {
+                X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                store.Open(OpenFlags.MaxAllowed | OpenFlags.ReadWrite);
+                if (!store.Certificates.Contains(cert))
+                {
+                    store.Add(cert);
+                }
+                //_cert = cert;
+                store.Close();
+                store.Dispose();
+                GC.Collect();
+                return cert;
+            }
+            return null;
+        }
+
+        #endregion
+
         #region Encryption Methods
-        public string EncryptStringToString(object plainString)
+        internal string EncryptStringToString(object plainString)
         {
             Type plainStringType = plainString.GetType();
             string baseString;
@@ -98,7 +121,7 @@ namespace Credential_Manager_App
             cms.Encrypt(recipient);
             return Convert.ToBase64String(cms.Encode());
         }
-        public byte[] EncryptStringToBytes(object plainString)
+        internal byte[] EncryptStringToBytes(object plainString)
         {
             string base64 = EncryptStringToString(plainString);
             return Encoding.UTF8.GetBytes(base64);
@@ -111,7 +134,7 @@ namespace Credential_Manager_App
             Marshal.ZeroFreeBSTR(pPoint);
             return plain;
         }
-        public SecureString Decrypt(byte[] encBytes)
+        internal SecureString Decrypt(byte[] encBytes)
         {
             string plain = PlainDecrypt(encBytes);
             SecureString ss = new SecureString();
@@ -121,12 +144,12 @@ namespace Credential_Manager_App
             }
             return ss;
         }
-        public string PlainDecrypt(byte[] encBytes)
+        internal string PlainDecrypt(byte[] encBytes)
         {
             string base64 = Encoding.UTF8.GetString(encBytes);      // back to Base64 string
             return PlainDecrypt(base64);
         }
-        public string PlainDecrypt(string base64)
+        internal string PlainDecrypt(string base64)
         {
             try
             {
@@ -149,13 +172,13 @@ namespace Credential_Manager_App
         #endregion
 
         #region Credential Methods
-        public PSCredential ToPSCredential(string userName, byte[] byteArray)
+        internal PSCredential ToPSCredential(string userName, byte[] byteArray)
         {
             SecureString secPass = Decrypt(byteArray);
             return new PSCredential(userName, secPass);
         }
 
-        public static ObservableCollection<CertListItem> GetInstalledCerts(StoreLocation location)
+        internal static ObservableCollection<CertListItem> GetInstalledCerts(StoreLocation location)
         {
             X509Store store = new X509Store(location);
             store.Open(OpenFlags.MaxAllowed);
@@ -175,13 +198,13 @@ namespace Credential_Manager_App
     #region Viewable Cert Abstract Class
     public abstract class ViewableCertificate
     {
-        public const int CRYPTUI_DISABLE_ADDTOSTORE = 0x00000010;
+        internal const int CRYPTUI_DISABLE_ADDTOSTORE = 0x00000010;
         [DllImport("CryptUI.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool CryptUIDlgViewCertificate(
+        internal static extern bool CryptUIDlgViewCertificate(
             ref CRYPTUI_VIEWCERTIFICATE_STRUCT pCertViewInfo,
             ref bool pfPropertiesChanged
         );
-        public struct CRYPTUI_VIEWCERTIFICATE_STRUCT
+        internal struct CRYPTUI_VIEWCERTIFICATE_STRUCT
         {
             public int dwSize;
             public IntPtr hwndParent;
@@ -208,7 +231,7 @@ namespace Credential_Manager_App
     #endregion
 
     #region CertListItem : ViewableCertificate, IEquatable<CertListItem>
-    public class CertListItem : ViewableCertificate, IEquatable<CertListItem>
+    internal class CertListItem : ViewableCertificate, IEquatable<CertListItem>
     {
         private X509Certificate2 _cert;
 
@@ -219,12 +242,12 @@ namespace Credential_Manager_App
         public string Expires { get { return _cert.NotAfter.ToString("M/d/yyyy"); } }
         public string SerialNumber { get { return _cert.SerialNumber; } }
         
-        public CertListItem(X509Certificate2 cert)
+        internal CertListItem(X509Certificate2 cert)
         {
             _cert = cert;
         }
 
-        public void ViewCertificate()
+        internal void ViewCertificate()
         {
             CRYPTUI_VIEWCERTIFICATE_STRUCT certViewInfo = new CRYPTUI_VIEWCERTIFICATE_STRUCT();
             certViewInfo.dwSize = Marshal.SizeOf(certViewInfo);
@@ -243,7 +266,7 @@ namespace Credential_Manager_App
             }
         }
 
-        public X509Certificate2 GetCertificate()
+        internal X509Certificate2 GetCertificate()
         {
             return _cert;
         }
@@ -277,7 +300,7 @@ namespace Credential_Manager_App
     #endregion
 
     #region CertEquality
-    public class CertEquality : EqualityComparer<CertListItem>
+    internal class CertEquality : EqualityComparer<CertListItem>
     {
         public override bool Equals(CertListItem x, CertListItem y)
         {

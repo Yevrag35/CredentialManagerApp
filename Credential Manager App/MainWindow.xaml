@@ -211,6 +211,7 @@
                             <RowDefinition Height="0.1*"/>
                         </Grid.RowDefinitions>
                         <Grid.Resources>
+                            <Image x:Key="copyIcon1" Source="Media/copy-icon_inverted.png" />
                             <ContextMenu x:Key="HashMenu" Background="White">
                                 <MenuItem Header="Copy" Command="ApplicationCommands.Copy"/>
                                 <MenuItem x:Name="selectAll" Header="Select All" Click="selectAll_Click"/>
@@ -219,10 +220,18 @@
                         </Grid.Resources>
 
                         <!-- Copy to Clipboard Buttons -->
-                        <Button x:Name="copyUserNamePlainBtn" x:Uid="inputPlainUserName" Grid.Column="3" Grid.Row="2" TabIndex="4" ToolTip="Copy username to the clipboard" Click="CopyBtnClip_Click"/>
-                        <Button x:Name="copyPasswordPlainBtn" x:Uid="inputPlainPasswordBox" Grid.Column="3" Grid.Row="6" TabIndex="5" ToolTip="Copy password to the clipboard" Click="CopyBtnClip_Click" IsEnabled="False"/>
-                        <Button x:Name="copyUsernameHashBtn" x:Uid="outputHashUserName" Grid.Column="7" Grid.Row="2" TabIndex="6" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click"/>
-                        <Button x:Name="copyPasswordHashBtn" x:Uid="outputHashPassword" Grid.Column="7" Grid.Row="6" TabIndex="7" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click"/>
+                        <Button x:Name="copyUserNamePlainBtn" x:Uid="inputPlainUserName" Grid.Column="3" Grid.Row="2" TabIndex="4" ToolTip="Copy username to the clipboard" Click="CopyBtnClip_Click">
+                            <Image Source="{Binding Source={StaticResource copyIcon1}, Path=Source}"/>
+                        </Button>
+                        <Button x:Name="copyPasswordPlainBtn" x:Uid="inputPlainPasswordBox" Grid.Column="3" Grid.Row="6" TabIndex="5" ToolTip="Copy password to the clipboard" Click="CopyBtnClip_Click">
+                            <Image Source="{Binding Source={StaticResource copyIcon1}, Path=Source}"/>
+                        </Button>
+                        <Button x:Name="copyUsernameHashBtn" x:Uid="outputHashUserName" Grid.Column="7" Grid.Row="2" TabIndex="6" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click">
+                            <Image Source="{Binding Source={StaticResource copyIcon1}, Path=Source}"/>
+                        </Button>
+                        <Button x:Name="copyPasswordHashBtn" x:Uid="outputHashPassword" Grid.Column="7" Grid.Row="6" TabIndex="7" ToolTip="{StaticResource copyHashBtnTooltip}" Click="CopyBtnClip_Click">
+                            <Image Source="{Binding Source={StaticResource copyIcon1}, Path=Source}"/>
+                        </Button>
                         <!-- End of Clipboard Buttons -->
 
                         <!-- Plain Input Fields -->
@@ -233,7 +242,7 @@
                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="inputPlainPasswordBtn_Click"
                                 Content="CLICK TO ENTER CREDENTIAL" FontWeight="Bold" />-->
                         <PasswordBox x:Name="inputPlainPasswordBox" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
-                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" MouseDoubleClick="inputPlainPasswordBox_MouseDoubleClick" x:Uid="gridTextBoxInputPass"
+                                HorizontalContentAlignment="Left" VerticalContentAlignment="Center" x:Uid="gridTextBoxInputPass"
                                 GotKeyboardFocus="inputPlainPasswordBox_GotKeyboardFocus" PreviewMouseLeftButtonDown="inputPlainPasswordBox_PreviewMouseLeftButtonDown"/>
                         <!--End of Plain Input Fields-->
 
@@ -276,6 +285,9 @@
                             <RowDefinition />
                             <RowDefinition Height="0.1*"/>
                         </Grid.RowDefinitions>
+                        <Grid.Resources>
+                            <Image x:Key="copyIcon2" Source="Media/copy-icon_inverted.png" />
+                        </Grid.Resources>
                         
                         <!-- Labels -->
                         <Label Content="USERNAME HASH:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputHashUserName"/>
@@ -287,15 +299,19 @@
                         <!-- Output PASSWORD And COPY-->
                         <PasswordBox x:Name="outputPass" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
                                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" x:Uid="passDecrypt" Focusable="False"/>
-                        
-                        <Button x:Name="copyBtnOutPass" Grid.Column="7" Grid.Row="6" Click="passBoxCopyBtn_Click" x:Uid="outputPass"/>
+
+                        <Button x:Name="copyBtnOutPass" Grid.Column="7" Grid.Row="6" Click="passBoxCopyBtn_Click" x:Uid="outputPass" ToolTip="Copy password to the clipboard">
+                            <Image Source="{Binding Source={StaticResource copyIcon2}, Path=Source}" />
+                        </Button>
                         <!-- End of PASSWORD And COPY -->
 
                         <TextBox x:Name="outputPlainUserName" Grid.Column="5" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" 
                                  IsTabStop="False" x:Uid="gridTextBox" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" 
                                  FontSize="14" FontWeight="Normal" IsReadOnly="True"/>
-                        
-                        <Button x:Name="copyBtnOutUser" x:Uid="outputPlainUserName" Grid.Column="7" Grid.Row="2" Click="CopyBtnClip_Click" ToolTip="Copy username to the clipboard" />
+
+                        <Button x:Name="copyBtnOutUser" x:Uid="outputPlainUserName" Grid.Column="7" Grid.Row="2" Click="CopyBtnClip_Click" ToolTip="Copy username to the clipboard">
+                            <Image Source="{Binding Source={StaticResource copyIcon2}, Path=Source}" />
+                        </Button>
 
                         <TextBox x:Name="inputHashUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32"
                                  x:Uid="gridTextBoxInput" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" GotKeyboardFocus="InputHash_GotKeyboardFocus"
@@ -316,12 +332,17 @@
                 <ColumnDefinition />
                 <ColumnDefinition Width="0.25*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
             <Grid.Resources>
                 <TextBox x:Key="DefCertText" Text="    &lt;No Certificate Chosen&gt;" />
                 <!-- Certificate Context Menu -->
                 <ContextMenu x:Key="CertificateContextMenu" Background="White">
-                    <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="chooseInstalledCert_Click"/>
-                    <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="selectCertBtn_Click"/>
+                    <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="selectCertBtn_Click"/>
+                    <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="findInstallablePfx_Click"/>
                     <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" />
                     <Separator />
                     <MenuItem x:Name="viewCertificateCTX" Header="View Certificate" Click="ViewCertificate_Click" />
@@ -330,18 +351,29 @@
                 </ContextMenu>
                 <!-- End of Certificate Context Menu -->
             </Grid.Resources>
-            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
+            
+            <!-- Hidden Button Trigger -->
+            <Button x:Name="hiddenInstallPfxBtn"  Width="0" Height="0" IsHitTestVisible="False" Opacity="0" IsTabStop="False" Click="findInstallablePfx_Click"/>
+            <!-- End of Hidden Button -->
+            
+            <Label Grid.Column="0" Grid.Row="0" HorizontalContentAlignment="Left" HorizontalAlignment="Left" VerticalContentAlignment="Center" VerticalAlignment="Bottom"
+                   Content="Active Certificate Thumbprint:" FontFamily="MS Office Symbol Bold" FontSize="14"/>
+
+            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
                     Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" IsTabStop="False" IsReadOnly="True" TextChanged="activeThumbprintBox_TextChanged"
                     ContextMenu="{StaticResource CertificateContextMenu}"/>
 
-            <Button x:Name="selectCertBtn" Grid.Column="1" Height="32" Content="Browse" FontFamily="MS Office Symbol Bold" FontSize="15" TabIndex="3" Click="selectCertBtn_Click" 
-                    IsDefault="True"/>
+            <Button x:Name="selectCertBtn" Grid.Column="1" Grid.Row="1" Height="32" Content="Browse" FontFamily="Gill Sans MT" 
+                    FontSize="16" TabIndex="3" Click="selectCertBtn_Click" />
         </Grid>
         <!-- End of Certificate Chooser -->
 
         <!-- Encrypt Button -->
-        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" Click="EncryptBtn_Click"
-                Width="175" Height="75" Content="ENCRYPT" FontFamily="MS Office Symbol Bold" FontSize="24" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" Click="EncryptBtn_Click" IsDefault="True"
+                Width="175" Height="75" Content="ENCRYPT" FontFamily="Gill Sans MT" FontWeight="Bold" FontSize="26" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
         <!-- End of Encrypt Button -->
+        
+        <!-- Hidden Exit Button -->
+        <Button x:Name="exitBtn" Height="0" Width="0" Click="exitBtn_Click" IsCancel="True"/>
     </Grid>
 </Window>

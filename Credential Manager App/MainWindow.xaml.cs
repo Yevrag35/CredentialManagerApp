@@ -7,7 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Security;
-using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -30,7 +30,7 @@ namespace Credential_Manager_App
     public partial class MainWindow : Window
     {
         #region MainWindow - Properties
-        public AppSettings _app;
+        internal AppSettings _app;
         public string AppNameAndVersion
         {
             get
@@ -45,8 +45,8 @@ namespace Credential_Manager_App
                 AppNameAndVersion = value;
             }
         }
-        public object StoredCert;
-        public Encryption _enc;
+        internal object StoredCert;
+        internal Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
         private string un;
@@ -54,7 +54,7 @@ namespace Credential_Manager_App
 
         private const string defUserText = @"<Enter the username>";
         private const string defCertText = @"    <No Certificate Chosen>";
-        private string CertificateText
+        public string CertificateText
         {
             get
             {
@@ -81,7 +81,7 @@ namespace Credential_Manager_App
                 }
             }
         }
-        public string DefaultUserNameText
+        internal string DefaultUserNameText
         {
             get { return _defu; }
             set
@@ -201,6 +201,11 @@ namespace Credential_Manager_App
             _app.SetPropertyValue("EncryptionCertificate", thumbprint);
         }
 
+        private void exitBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             if (!_enc.ActiveThumbprint.Equals(StoredCert))
@@ -242,56 +247,6 @@ namespace Credential_Manager_App
         {
             _app.SetPropertyValue("WindowX", (int)ActualWidth);
             _app.SetPropertyValue("WindowY", (int)ActualHeight);
-        }
-
-        #endregion
-
-        #region Enter Credential Button
-        private void inputPlainPasswordBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (encryptBtn.CommandParameter.Equals(EncryptButtonBehavior.Encrypt))
-            {
-                Dictionary<string, object> credResult = GetCredential();
-                if (credResult != null && credResult["Result"].Equals(true))
-                {
-                    EncryptButton_Encrypt(encryptBtn, credResult);
-                }
-            }
-        }
-
-        private Dictionary<string, object> GetCredential()
-        {
-            CredentialDialog credDiag = new CredentialDialog()
-            {
-                MainInstruction = "Type the username and password to store:",
-                Target = "Credential_Manager_App",
-                ShowSaveCheckBox = true,
-                ShowUIForSavedCredentials = true,
-                WindowTitle = "Credential Manager App"
-            };
-            if (!String.IsNullOrEmpty(inputPlainUserName.Text))
-            {
-                //credDiag.
-            }
-            Dictionary<string, object> dict = new Dictionary<string, object>();
-            SecureString ss = new SecureString();
-            System.Windows.Forms.DialogResult diagResult = credDiag.ShowDialog();
-            bool result = diagResult.Equals(System.Windows.Forms.DialogResult.OK);
-            if (result)
-            {
-                foreach (char c in credDiag.Password)
-                {
-                    ss.AppendChar(c);
-                }
-                dict.Add("Result", result);
-                dict.Add("Username", credDiag.UserName);
-                dict.Add("Password", ss);
-                return dict;
-            }
-            else
-            {
-                return null;
-            }
         }
 
         #endregion
@@ -584,29 +539,8 @@ namespace Credential_Manager_App
 
         #endregion
 
-        #region Find Certificate Button Behavior
+        #region Select Certificate Button Behavior
         private void selectCertBtn_Click(object sender, RoutedEventArgs e)
-        {
-            VistaOpenFileDialog fileDiag = new VistaOpenFileDialog()
-            {
-                ShowHelp = true,
-                Filter = "Certificate files (*.cer;*.crt;*.pem)|*.cer;*.crt;*.pem|CER files (*.cer)|*.cer|CRT files (*.crt)|*.crt|PEM files (*.pem)|*.pem|All files (*.*)|*.*",
-                InitialDirectory = Environment.GetEnvironmentVariable("USERPROFILE") + "\\Desktop",
-                Multiselect = false,
-                Title = "Select an encryption certificate"
-            };
-            if (fileDiag.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                string thumb = _enc.GetCertificateThumbprint(fileDiag.FileName);
-                CertificateText = thumb;
-            }
-        }
-
-
-        #endregion
-
-        #region CertBox Right-Click Menu
-        private void chooseInstalledCert_Click(object sender, RoutedEventArgs e)
         {
             Thread cThread = new Thread(OpenCertSelector)
             {
@@ -615,6 +549,19 @@ namespace Credential_Manager_App
             };
             cThread.SetApartmentState(ApartmentState.STA);
             cThread.Start();
+        }
+
+
+        #endregion
+
+        #region CertBox Right-Click Menu
+        private void findInstallablePfx_Click(object sender, RoutedEventArgs e)
+        {
+            X509Certificate2 cert = SharedPrompt.PfxPrompt();
+            if (cert != null)
+            {
+                CertificateText = cert.Thumbprint;
+            }
         }
 
         private void OpenCertSelector()
@@ -628,6 +575,7 @@ namespace Credential_Manager_App
                     CertificateText = certSelector.SelectedCert.SHA1Thumbprint;
                 });
             }
+            GC.Collect();
         }
 
         private void clearCertificate_Click(object sender, RoutedEventArgs e)
@@ -657,15 +605,25 @@ namespace Credential_Manager_App
         private void CopyBtnClip_Click(object sender, RoutedEventArgs e)
         {
             Button but = (Button)sender;
-            var getme = encAreaGrid.Children.OfType<UIElement>().ToList();
-            foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList())
+            var getme = encAreaGrid.Children.OfType<UIElement>().ToList().Where(x => x.Uid.Contains("gridTextBox")).ToList();
+            foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList().Where(x => x.Uid.Contains("gridTextBox")))
             {
                 getme.Add(item);
             }
-            IEnumerable<TextBox> getBoxes = getme.Where(x => x.Uid == "gridTextBox").Cast<TextBox>();
-            TextBox gotcha = getBoxes.Single(x => x.Name == but.Uid);
-
-            Clipboard.SetText(gotcha.Text);
+            foreach (UIElement item in getme)
+            {
+                Type itemType = item.GetType();
+                if (itemType == typeof(TextBox) && ((TextBox)item).Name == but.Uid)
+                {
+                    Clipboard.SetText(((TextBox)item).Text);
+                    return;
+                }
+                else if (itemType == typeof(PasswordBox) && ((PasswordBox)item).Name == but.Uid)
+                {
+                    Clipboard.SetText(((PasswordBox)item).Password);
+                    return;
+                }
+            }
         }
         private void passBoxCopyBtn_Click(object sender, RoutedEventArgs e)
         {

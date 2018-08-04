@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Credential_Manager_App"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="CertSelector" Height="350" Width="600" MinHeight="350" MinWidth="600">
+        Title="Certificate Selector" Height="350" Width="600" MinHeight="350" MinWidth="600">
     <Window.Resources>
         <FontFamily x:Key="DefaultFont">MS Reference Sans Serif</FontFamily>
         <Style TargetType="Label">
@@ -102,7 +102,7 @@
             <ColumnDefinition Width="10" />
             <ColumnDefinition Width="150"/>
             <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width="0.65*"/>
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -114,6 +114,10 @@
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
         <Label Content="Select an installed certificate to use:" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="4"/>
+
+        <Button x:Name="pfxInstallerBtn" Grid.Row="0" Grid.Column="5" VerticalAlignment="Center" Height="25" Content="Import PFX..." FontFamily="Segoe UI Symbol"
+                HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" Click="pfxInstallerBtn_Click"/>
+
         <ListView x:Name="listOCerts" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="5" Grid.RowSpan="2" ScrollViewer.CanContentScroll="False"
                  SelectionMode="Single" DataContext="{Binding Path=certCol}" ItemsSource="{Binding}">
             <ListView.Resources>
@@ -136,8 +140,8 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button x:Name="cancelBtn" Grid.Column="1" Grid.Row="4" Content="CANCEL" FontSize="16" Click="cancelBtn_Click" IsCancel="True"/>
-        <Button x:Name="useBtn" Grid.Column="3" Grid.Row="4" Content="SELECT" FontSize="20" Click="useBtn_Click" IsDefault="True"/>
+        <Button x:Name="cancelBtn" Grid.Column="1" Grid.Row="4" FontFamily="Gill Sans MT" FontWeight="Normal" Content="CANCEL" FontSize="16" Click="cancelBtn_Click" IsCancel="True"/>
+        <Button x:Name="useBtn" Grid.Column="3" Grid.Row="4" Content="SELECT" FontFamily="Gill Sans MT" FontWeight="Bold" FontSize="22" Click="useBtn_Click" IsDefault="True"/>
     </Grid>
     <Window.Background>
         <LinearGradientBrush StartPoint='0,0' EndPoint='0,1'>
