@@ -1,5 +1,7 @@
 # Credential Manager App
 
+[Download Link -- v1.1.1.0]( https://github.com/Yevrag35/CredentialManagerApp/raw/master/Credential%20Manager%20App/Msi/Credential%20Manager%20App_1.1.1.0.msi)
+
 ## v1.1.1
 
 ### Changes:
