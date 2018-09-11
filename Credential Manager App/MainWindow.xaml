@@ -19,6 +19,7 @@
         </LinearGradientBrush>
     </Window.Background>
     <Window.Resources>
+
         <!--Control colors.-->
         <Color x:Key="ControlNormalColor">#336699</Color>
         <Color x:Key="ControlMouseOverColor">#6699FF</Color>
@@ -89,8 +90,6 @@
             <Setter Property="SnapsToDevicePixels" Value="true" />
             <Setter Property="OverridesDefaultStyle" Value="False" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}" />
-            <!--<Setter Property="MinHeight" Value="29px" />
-            <Setter Property="MinWidth"  Value="103px" />-->
             <Setter Property="Foreground" Value="#FFFFFFFF" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -288,14 +287,14 @@
                         <Grid.Resources>
                             <Image x:Key="copyIcon2" Source="Media/copy-icon_inverted.png" />
                         </Grid.Resources>
-                        
+
                         <!-- Labels -->
                         <Label Content="USERNAME HASH:" Grid.Column="1" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputHashUserName"/>
                         <Label Content="PASSWORD HASH:" Grid.Column="1" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" x:Uid="inputHashPassword"/>
                         <Label Content="USERNAME PLAIN:" Grid.Column="5" Grid.Row="1" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
                         <Label Content="PASSWORD:" Grid.Column="5" Grid.Row="5" FontFamily="Trebuchet MS" FontWeight="Bold" FontSize="13" />
                         <!-- End of Labels-->
-                        
+
                         <!-- Output PASSWORD And COPY-->
                         <PasswordBox x:Name="outputPass" Grid.Column="5" Grid.Row="5" Grid.RowSpan="3" VerticalAlignment="Center" Height="32" TabIndex="2"
                                 HorizontalContentAlignment="Left" VerticalContentAlignment="Center" x:Uid="passDecrypt" Focusable="False"/>
@@ -316,7 +315,7 @@
                         <TextBox x:Name="inputHashUserName" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Center" Height="32"
                                  x:Uid="gridTextBoxInput" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" GotKeyboardFocus="InputHash_GotKeyboardFocus"
                                  FontSize="14" FontWeight="Normal" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown"/>
-                        
+
                         <TextBox x:Name="inputHashPassword" Grid.Column="1" Grid.Row="5" Grid.RowSpan="3" Height="32" VerticalContentAlignment="Center"
                                  GotKeyboardFocus="InputHash_GotKeyboardFocus" PreviewMouseLeftButtonDown="InputHash_PreviewMouseLeftButtonDown"
                                  HorizontalContentAlignment="Left" FontSize="14" FontWeight="Normal" x:Uid="gridTextBoxInput"/>
@@ -330,6 +329,7 @@
         <Grid x:Name="certGridArea" Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
+                <ColumnDefinition Width="0.18*" />
                 <ColumnDefinition Width="0.25*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -343,7 +343,7 @@
                 <ContextMenu x:Key="CertificateContextMenu" Background="White">
                     <MenuItem x:Name="chooseInstalledCert" Header="Choose an Installed Certificate" Click="selectCertBtn_Click"/>
                     <MenuItem x:Name="findCertificateFile" Header="Find a Certificate File" Click="findInstallablePfx_Click"/>
-                    <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" />
+                    <MenuItem x:Name="clearCertificate" Header="Clear Certificate" Click="clearCertificate_Click" x:Uid="DynamicEnabled"/>
                     <Separator />
                     <MenuItem x:Name="viewCertificateCTX" Header="View Certificate" Click="ViewCertificate_Click" />
                     <Separator />
@@ -351,20 +351,28 @@
                 </ContextMenu>
                 <!-- End of Certificate Context Menu -->
             </Grid.Resources>
-            
+
             <!-- Hidden Button Trigger -->
-            <Button x:Name="hiddenInstallPfxBtn"  Width="0" Height="0" IsHitTestVisible="False" Opacity="0" IsTabStop="False" Click="findInstallablePfx_Click"/>
+            <Button x:Name="hiddenInstallPfxBtn" Width="0" Height="0" IsHitTestVisible="False" Opacity="0" 
+                    IsTabStop="False" Click="findInstallablePfx_Click"/>
             <!-- End of Hidden Button -->
-            
-            <Label Grid.Column="0" Grid.Row="0" HorizontalContentAlignment="Left" HorizontalAlignment="Left" VerticalContentAlignment="Center" VerticalAlignment="Bottom"
+
+            <Label Grid.Column="0" Grid.Row="0" HorizontalContentAlignment="Left" HorizontalAlignment="Left" 
+                   VerticalContentAlignment="Center" VerticalAlignment="Bottom"
                    Content="Active Certificate Thumbprint:" FontFamily="MS Office Symbol Bold" FontSize="14"/>
 
-            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="32" VerticalContentAlignment="Center"
-                    Text="    &lt;No Certificate Chosen&gt;" FontSize="14" FontStyle="Italic" FontWeight="Thin" IsTabStop="False" IsReadOnly="True" TextChanged="activeThumbprintBox_TextChanged"
-                    ContextMenu="{StaticResource CertificateContextMenu}"/>
+            <Button x:Name="newCertBtn" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" Content="New Certificate" 
+                    VerticalAlignment="Bottom" Click="newCertBtn_Click"
+                    Height="30" FontFamily="Gill Sans MT" FontSize="16" TabIndex="3"/>
 
-            <Button x:Name="selectCertBtn" Grid.Column="1" Grid.Row="1" Height="32" Content="Browse" FontFamily="Gill Sans MT" 
-                    FontSize="16" TabIndex="3" Click="selectCertBtn_Click" />
+            <TextBox x:Name="activeThumbprintBox" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Height="32" IsReadOnly="True"
+                     Text="{Binding Path=CertificateText}"
+                     VerticalAlignment="Center" VerticalContentAlignment="Center" TextChanged="activeThumbprintBox_TextChanged"
+                    ContextMenu="{StaticResource CertificateContextMenu}" />
+
+            <Button x:Name="selectCertBtn" Grid.Column="2" Grid.Row="1" Height="32" Content="Browse" FontFamily="Gill Sans MT" 
+                    FontSize="16" TabIndex="4" Click="selectCertBtn_Click" />
+            
         </Grid>
         <!-- End of Certificate Chooser -->
 
@@ -372,7 +380,7 @@
         <Button x:Name="encryptBtn" Grid.Column="4" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" Click="EncryptBtn_Click" IsDefault="True"
                 Width="175" Height="75" Content="ENCRYPT" FontFamily="Gill Sans MT" FontWeight="Bold" FontSize="26" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
         <!-- End of Encrypt Button -->
-        
+
         <!-- Hidden Exit Button -->
         <Button x:Name="exitBtn" Height="0" Width="0" Click="exitBtn_Click" IsCancel="True"/>
     </Grid>

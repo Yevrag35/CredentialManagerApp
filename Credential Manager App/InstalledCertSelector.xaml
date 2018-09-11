@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Credential_Manager_App"
+        WindowStartupLocation="CenterScreen" Closing="CertSelector_Closing"
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="Certificate Selector" Height="350" Width="600" MinHeight="350" MinWidth="600">
     <Window.Resources>
@@ -102,6 +103,8 @@
             <ColumnDefinition Width="10" />
             <ColumnDefinition Width="150"/>
             <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition Width="30"/>
             <ColumnDefinition Width="0.65*"/>
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
@@ -113,12 +116,32 @@
             <RowDefinition Height="40"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
-        <Label Content="Select an installed certificate to use:" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="4"/>
+        
+        <!-- Machine Context Grid -->
+        <Grid x:Name="machineContextGrid" Grid.Column="5" Grid.Row="4" Grid.ColumnSpan="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10"/>
+                <RowDefinition />
+                <RowDefinition Height="10"/>
+            </Grid.RowDefinitions>
+            <Button x:Name="switchContextBtn" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Grid.RowSpan="3" 
+                    FontSize="13" HorizontalContentAlignment="Right" Click="switchContextBtn_Click"/>
+            <Image x:Name="uacShield" Source="Media/uac_shield.png" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left"
+                   Visibility="Hidden" IsEnabled="False"/>
+        </Grid>
+        <!-- End of Machine Context Grid -->
+        
+        <Label Content="Select an installed certificate to use:" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="5"/>
 
-        <Button x:Name="pfxInstallerBtn" Grid.Row="0" Grid.Column="5" VerticalAlignment="Center" Height="25" Content="Import PFX..." FontFamily="Segoe UI Symbol"
+        <Button x:Name="pfxInstallerBtn" Grid.Row="0" Grid.Column="6" Grid.ColumnSpan="2" VerticalAlignment="Center" Height="25" Content="Import PFX..." FontFamily="Segoe UI Symbol"
                 HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" Click="pfxInstallerBtn_Click"/>
 
-        <ListView x:Name="listOCerts" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="5" Grid.RowSpan="2" ScrollViewer.CanContentScroll="False"
+        <ListView x:Name="listOCerts" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="7" Grid.RowSpan="2" ScrollViewer.CanContentScroll="False"
                  SelectionMode="Single" DataContext="{Binding Path=certCol}" ItemsSource="{Binding}">
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">

@@ -6,9 +6,9 @@ namespace Credential_Manager_App
 {
     internal static class SharedPrompt
     {
-        internal static X509Certificate2 PfxPrompt()
+        internal static X509Certificate2 PfxPrompt(StoreLocation loc)
         {
-            VistaOpenFileDialog fileDiag = new VistaOpenFileDialog()
+            var fileDiag = new VistaOpenFileDialog()
             {
                 ShowHelp = true,
                 Filter = "PFX certificates (*.pfx)|*.pfx",
@@ -18,7 +18,7 @@ namespace Credential_Manager_App
             };
             if (fileDiag.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                CredentialDialog pfxPass = new CredentialDialog
+                var pfxPass = new CredentialDialog
                 {
                     ShowSaveCheckBox = false,
                     MainInstruction = "Enter the password for the protected pfx file.",
@@ -29,7 +29,7 @@ namespace Credential_Manager_App
                 };
                 if (pfxPass.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    X509Certificate2 cert = Encryption.InstallPfx(fileDiag.FileName, pfxPass.Credentials.SecurePassword);
+                    X509Certificate2 cert = Encryption.InstallPfx(fileDiag.FileName, pfxPass.Credentials.SecurePassword, loc);
                     return cert;
                 }
             }

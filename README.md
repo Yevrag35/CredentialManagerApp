@@ -1,5 +1,15 @@
 # Credential Manager App
 
+## v1.1.1
+
+### Changes:
+
+- Added support for LocalMachine certificates. _(Requires admin rights)_
+- The option to __create a new self-signed certificate__.
+- Added color transitions when the following happen:
+  1. A new certificate is chosen or cleared; blinks blue  (it also happens during app launch).
+  1. When the Encrypt/Decyrpt button is pressed when fields are missing; blinks red in the boxes that are missing.
+
 ## v1.1.0
 
 ### Changes:
@@ -16,7 +26,7 @@
 
 ## v1.0.2
 
-### Bugs fixed:
+### Bugs fixes:
 
 - When *decrypting* input, the output was not being displayed in the proper 'output' text boxes.
 
@@ -30,7 +40,7 @@
 - Window title is now using a dynamic version number query.
 
 
-### Bugs fixed:
+### Bugs fixes:
 
 - When you switch tabs (either tab) and only 1 text box is populated (either username or password), upon switching back to that tab, the Encrypt button shows "Reset" properly, however disables the button.  This forces you to enter text in the other textbox, or change the existing text to re-enable the button.
 - The Encrypt/Decrypt will keep its "RESET" status when switching to a tab that contains already specified input.

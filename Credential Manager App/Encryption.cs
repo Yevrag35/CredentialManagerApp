@@ -14,51 +14,66 @@ using System.Windows;
 
 namespace Credential_Manager_App
 {
-    internal class Encryption
+    public class Encryption
     {
         #region Properties/Fields
         private X509Certificate2 _cert;
+        public StoreLocation workingStore = StoreLocation.CurrentUser;
         private byte[] workingContent;
-        public string ActiveThumbprint
-        {
-            get
-            {
-                if (_cert == null || String.IsNullOrEmpty(_cert.Thumbprint))
-                {
-                    return String.Empty;
-                }
-                else
-                {
-                    return _cert.Thumbprint;
-                }
-            }
-        }
+        public string ActiveThumbprint => _cert == null || string.IsNullOrEmpty(_cert.Thumbprint) ? string.Empty : _cert.Thumbprint;
 
         #endregion
 
         #region Constructors
         internal Encryption() { }
+        internal Encryption(StoreLocation inStore) => workingStore = inStore;
 
         #endregion
 
         #region Certificate Methods
-        internal void SetActiveCertificate(string SHA1Thumbprint)
+        internal void SetActiveCertificate(string SHA1Thumbprint, int loc)
         {
-            X509Store store = new X509Store(StoreLocation.CurrentUser);
-            store.Open(OpenFlags.MaxAllowed);
-            X509Certificate2Collection certs = store.Certificates.Find(X509FindType.FindByThumbprint, SHA1Thumbprint, false);
-            if (certs.Count > 0)
+            SetActiveCertificate(SHA1Thumbprint, (StoreLocation)loc);
+        }
+        internal void SetActiveCertificate(string SHA1Thumbprint, StoreLocation loc)
+        {
+            using (var store = new X509Store(loc))
             {
-                _cert = certs[0];
+                store.Open(OpenFlags.OpenExistingOnly);
+                X509Certificate2Collection certs = store.Certificates.Find(X509FindType.FindByThumbprint, SHA1Thumbprint, false);
+                if (certs.Count > 0)
+                {
+                    _cert = certs[0];
+                }
             }
-            store.Close();
-            store.Dispose();
+        }
+        internal void SetActiveCertificate(CertListItem cli)
+        {
+            _cert = cli.GetCertificate();
         }
 
-        internal X509Certificate2 GetActiveCertificate()
+        internal CertListItem TextToCLI(string thumbprint, int loc)
         {
-            return _cert;
+            return TextToCLI(thumbprint, (StoreLocation)loc);
         }
+        internal CertListItem TextToCLI(string thumbprint, StoreLocation loc)
+        {
+            using (var store = new X509Store(loc))
+            {
+                store.Open(OpenFlags.OpenExistingOnly);
+                X509Certificate2Collection certs = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+                if (certs.Count > 0)
+                {
+                    return new CertListItem(certs[0]);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        internal X509Certificate2 GetActiveCertificate() => _cert;
 
         internal void ClearCertificate()
         {
@@ -68,29 +83,28 @@ namespace Credential_Manager_App
 
         internal string GetCertificateThumbprint(string fileName)
         {
-            X509Certificate2 cert = new X509Certificate2(fileName);
+            var cert = new X509Certificate2(fileName);
             return cert.Thumbprint;
         }
 
         #endregion
 
         #region PKCS#12 Methods
-        internal static X509Certificate2 InstallPfx(string pathToCert, SecureString securePass)
+        internal static X509Certificate2 InstallPfx(string pathToCert, SecureString securePass, StoreLocation loc)
         {
-            X509Certificate2 cert = new X509Certificate2(pathToCert, securePass);
+            var cert = new X509Certificate2(pathToCert, securePass);
             if (cert != null)
             {
-                X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                store.Open(OpenFlags.MaxAllowed | OpenFlags.ReadWrite);
-                if (!store.Certificates.Contains(cert))
+                using (var store = new X509Store(StoreName.My, loc))
                 {
-                    store.Add(cert);
+                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                    if (!store.Certificates.Contains(cert))
+                    {
+                        store.Add(cert);
+                    }
+                    GC.Collect();
+                    return cert;
                 }
-                //_cert = cert;
-                store.Close();
-                store.Dispose();
-                GC.Collect();
-                return cert;
             }
             return null;
         }
@@ -106,18 +120,15 @@ namespace Credential_Manager_App
             {
                 throw new ArgumentException("Parameter must be of a string value!");
             }
-            else if (plainStringType == typeof(SecureString))
-            {
-                baseString = ConvertFromSecureToPlain((SecureString)plainString);
-            }
             else
             {
-                baseString = (string)plainString;
+                baseString = plainStringType == typeof(SecureString) ? 
+                    ConvertFromSecureToPlain((SecureString)plainString) : (string)plainString;
             }
             byte[] btContent = Encoding.UTF8.GetBytes(baseString);
-            ContentInfo content = new ContentInfo(btContent);
-            EnvelopedCms cms = new EnvelopedCms(content);
-            CmsRecipient recipient = new CmsRecipient(_cert);
+            var content = new ContentInfo(btContent);
+            var cms = new EnvelopedCms(content);
+            var recipient = new CmsRecipient(_cert);
             cms.Encrypt(recipient);
             return Convert.ToBase64String(cms.Encode());
         }
@@ -137,7 +148,7 @@ namespace Credential_Manager_App
         internal SecureString Decrypt(byte[] encBytes)
         {
             string plain = PlainDecrypt(encBytes);
-            SecureString ss = new SecureString();
+            var ss = new SecureString();
             foreach (char c in plain)
             {
                 ss.AppendChar(c);
@@ -154,7 +165,7 @@ namespace Credential_Manager_App
             try
             {
                 workingContent = Convert.FromBase64String(base64);
-                EnvelopedCms cms = new EnvelopedCms();
+                var cms = new EnvelopedCms();
                 cms.Decode(workingContent);
                 cms.Decrypt();
                 return Encoding.UTF8.GetString(cms.ContentInfo.Content);
@@ -180,16 +191,18 @@ namespace Credential_Manager_App
 
         internal static ObservableCollection<CertListItem> GetInstalledCerts(StoreLocation location)
         {
-            X509Store store = new X509Store(location);
-            store.Open(OpenFlags.MaxAllowed);
-            X509Certificate2Collection allCertsInStore = store.Certificates;
-            ObservableCollection<CertListItem> col = new ObservableCollection<CertListItem>();
-            for (int i = 0; i < allCertsInStore.Count; i++)
-            {
-                X509Certificate2 c = allCertsInStore[i];
-                col.Add(new CertListItem(c));
+            using (var store = new X509Store(location))
+            { 
+                store.Open(OpenFlags.OpenExistingOnly);
+                X509Certificate2Collection allCertsInStore = store.Certificates;
+                var col = new ObservableCollection<CertListItem>();
+                for (int i = 0; i < allCertsInStore.Count; i++)
+                {
+                    X509Certificate2 c = allCertsInStore[i];
+                    col.Add(new CertListItem(c));
+                }
+                return col;
             }
-            return col;
         }
 
         #endregion
@@ -210,15 +223,15 @@ namespace Credential_Manager_App
             public IntPtr hwndParent;
             public int dwFlags;
             [MarshalAs(UnmanagedType.LPWStr)]
-            public String szTitle;
+            public string szTitle;
             public IntPtr pCertContext;
             public IntPtr rgszPurposes;
             public int cPurposes;
             public IntPtr pCryptProviderData; // or hWVTStateData
-            public Boolean fpCryptProviderDataTrustedUsage;
+            public bool fpCryptProviderDataTrustedUsage;
             public int idxSigner;
             public int idxCert;
-            public Boolean fCounterSigner;
+            public bool fCounterSigner;
             public int idxCounterSigner;
             public int cStores;
             public IntPtr rghStores;
@@ -231,25 +244,33 @@ namespace Credential_Manager_App
     #endregion
 
     #region CertListItem : ViewableCertificate, IEquatable<CertListItem>
-    internal class CertListItem : ViewableCertificate, IEquatable<CertListItem>
+    public class CertListItem : ViewableCertificate, IEquatable<CertListItem>
     {
         private X509Certificate2 _cert;
+        private readonly StoreLocation _sl;
 
-        public string SHA1Thumbprint { get { return _cert.Thumbprint; } }
-        public string Subject { get { return _cert.Subject; } }
-        public string Issuer { get { return _cert.Issuer; } }
-        public string FriendlyName { get { return _cert.FriendlyName; } }
-        public string Expires { get { return _cert.NotAfter.ToString("M/d/yyyy"); } }
-        public string SerialNumber { get { return _cert.SerialNumber; } }
-        
-        internal CertListItem(X509Certificate2 cert)
+        public string SHA1Thumbprint => _cert.Thumbprint;
+        public string Subject => _cert.Subject;
+        public string Issuer => _cert.Issuer;
+        public string FriendlyName => _cert.FriendlyName;
+        public string Expires => _cert.NotAfter.ToString("M/d/yyyy");
+        public string SerialNumber => _cert.SerialNumber;
+        public StoreLocation StoreLocation => _sl;
+
+        public CertListItem(X509Certificate2 cert)
         {
             _cert = cert;
+            using (var store = new X509Store(StoreLocation.LocalMachine))
+            {
+                store.Open(OpenFlags.OpenExistingOnly);
+                var certs = store.Certificates.Find(X509FindType.FindBySerialNumber, _cert.SerialNumber, false);
+                _sl = certs.Count != 0 ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
+            }
         }
 
-        internal void ViewCertificate()
+        public void ViewCertificate()
         {
-            CRYPTUI_VIEWCERTIFICATE_STRUCT certViewInfo = new CRYPTUI_VIEWCERTIFICATE_STRUCT();
+            var certViewInfo = new CRYPTUI_VIEWCERTIFICATE_STRUCT();
             certViewInfo.dwSize = Marshal.SizeOf(certViewInfo);
             certViewInfo.pCertContext = _cert.Handle;
             certViewInfo.szTitle = "Certificate Info";
@@ -261,40 +282,22 @@ namespace Credential_Manager_App
                 int error = Marshal.GetLastWin32Error();
                 if (error != 1223)
                 {
-                    MessageBox.Show("Showing the certificate errored with exit code " + error.ToString(), "ERROR!", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Showing the certificate errored with exit code " + error.ToString(), 
+                        "ERROR!", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
-        internal X509Certificate2 GetCertificate()
-        {
-            return _cert;
-        }
+        internal X509Certificate2 GetCertificate() => _cert;
 
         public bool Equals(CertListItem item)
         {
-            CertEquality ceq = new CertEquality();
-            if (ceq.Equals(this, item))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            var ceq = new CertEquality();
+            return ceq.Equals(this, item) ? true : false;
         }
-        public override bool Equals(object obj)
-        {
-            return base.Equals(obj);
-        }
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-        public override string ToString()
-        {
-            return SHA1Thumbprint;
-        }
+        public override bool Equals(object obj) => base.Equals(obj);
+        public override int GetHashCode() => base.GetHashCode();
+        public override string ToString() => SHA1Thumbprint;
     }
 
     #endregion
@@ -302,21 +305,8 @@ namespace Credential_Manager_App
     #region CertEquality
     internal class CertEquality : EqualityComparer<CertListItem>
     {
-        public override bool Equals(CertListItem x, CertListItem y)
-        {
-            if (x.SerialNumber == y.SerialNumber)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        public override int GetHashCode(CertListItem obj)
-        {
-            return 0;
-        }
+        public override bool Equals(CertListItem x, CertListItem y) => x.SerialNumber == y.SerialNumber ? true : false;
+        public override int GetHashCode(CertListItem obj) => 0;
     }
 
     #endregion

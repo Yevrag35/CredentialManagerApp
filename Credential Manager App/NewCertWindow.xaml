@@ -1,0 +1,218 @@
+﻿<Window x:Class="Credential_Manager_App.NewCertWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        xmlns:local="clr-namespace:Credential_Manager_App" Closing="NewCertWindow_Closing"
+        mc:Ignorable="d" MinHeight="320" MinWidth="600" WindowStartupLocation="CenterScreen"
+        Title="Create New Certificate" Height="320" Width="600" MaxHeight="320" MaxWidth="600">
+    <Window.Background>
+        <LinearGradientBrush StartPoint='0,0' EndPoint='0,1'>
+            <LinearGradientBrush.GradientStops>
+                <GradientStop Color='#C4CBD8' Offset='0' />
+                <GradientStop Color='#E6EAF5' Offset='0.2' />
+                <GradientStop Color='#CFD7E2' Offset='0.9' />
+                <GradientStop Color='#C4CBD8' Offset='1' />
+            </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
+    </Window.Background>
+    <Window.Resources>
+
+        
+        <!--Control colors.-->
+        <Color x:Key="ControlNormalColor">#336699</Color>
+        <Color x:Key="ControlMouseOverColor">#6699FF</Color>
+        <Color x:Key="DisabledControlColor">#FFF2F2F2</Color>
+        <Color x:Key="DisabledForegroundColor">#FFBFBFBF</Color>
+        <Color x:Key="ControlPressedColor">#FF211AA9</Color>
+        <SolidColorBrush x:Key="RedBrush" Color="#dadcdf"/>
+        <SolidColorBrush x:Key="SolidBorderBrush" Color="#888" />
+        <SolidColorBrush x:Key="GreenBrush" Color="White" />
+        <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#EEE" />
+        <SolidColorBrush x:Key="DisabledBorderBrush" Color="#AAA" />
+        <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#888" />
+
+        <!-- Font to use when entering text -->
+        <FontFamily x:Key="activeFont">Trebuchet MS</FontFamily>
+
+        <Style x:Key="ButtonFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border>
+                            <Rectangle Margin="2" StrokeThickness="1" Stroke="#60000000" StrokeDashArray="1 2" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Button -->
+        <Style TargetType="Button">
+            <Setter Property="SnapsToDevicePixels" Value="true" />
+            <Setter Property="OverridesDefaultStyle" Value="False" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}" />
+            <Setter Property="Foreground" Value="#FFFFFFFF" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border TextBlock.Foreground="{TemplateBinding Foreground}" x:Name="Border">
+                            <Border.Background>
+                                <SolidColorBrush  Color="{DynamicResource ControlNormalColor}" />
+                            </Border.Background>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0:0:0.5" />
+                                        <VisualTransition GeneratedDuration="0" To="Pressed" />
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="MouseOver">
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlMouseOverColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlPressedColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource DisabledControlColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)"
+                                                Storyboard.TargetName="Border">
+                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource DisabledForegroundColor}" />
+                                            </ColorAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Margin="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <!-- End of Window Design -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="90"/>
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition />
+            <ColumnDefinition Width="0.45*"/>
+            <ColumnDefinition Width="20"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Label Content="Create a new self-signed certificate:" Grid.Column="1" Grid.ColumnSpan="9"  Grid.Row="0" 
+                FontSize="24" FontWeight="Bold"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Left" />
+        <Button x:Name="createBtn" Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="8" Content="CREATE" TabIndex="1"
+                FontSize="20" FontWeight="Bold" Click="createBtn_Click" IsDefault="True"/>
+        <Button x:Name="cancelBtn" Grid.Column="2" Grid.Row="8" Content="CANCEL"
+                FontSize="16" IsCancel="True" Click="cancelBtn_Click"/>
+        
+        <!-- OPTIONS (Labels) -->
+        <Label Content="Subject:" Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="1" HorizontalContentAlignment="Right"
+                FontSize="14" VerticalContentAlignment="Center" FontWeight="SemiBold" />
+        <Label Content="Friendly Name:" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="2" FontWeight="SemiBold"
+                HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="14"/>
+        <Label Content="Algorithm:" Grid.Column="2" Grid.Row="3" FontWeight="SemiBold" FontSize="14"
+                HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+        <Label Content="Key Length:" Grid.Column="2" Grid.Row="4" FontWeight="SemiBold" FontSize="14"
+                HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+        <Label Content="Valid Until:" Grid.Column="2" Grid.Row="5" FontWeight="SemiBold" FontSize="14"
+                HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+        <Label Content="Store:" Grid.Column="8" Grid.Row="3" FontWeight="SemiBold" FontSize="14"
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+
+        <!-- OPTIONS (Fields)-->
+        <TextBox x:Name="subjTextBox" Grid.Row="1" Grid.Column="4" Grid.ColumnSpan="6" FontSize="15" 
+                Text="{Binding Path=SubText}"
+                HorizontalContentAlignment="Left" VerticalContentAlignment="Center"/>
+        <TextBox x:Name="fNameTextBox" Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="6" FontSize="15"
+                 Text="{Binding Path=FriendName}"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
+        <ComboBox x:Name="algoComboBox" Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="3" SelectedIndex="{Binding Path=SavedAlgorithm}" FontSize="15"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontWeight="SemiBold">
+            <ComboBox.ItemContainerStyle>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="FontSize" Value="15" />
+                </Style>
+            </ComboBox.ItemContainerStyle>
+            <ComboBoxItem x:Name="cbiSHA256" Content="SHA256"/>
+            <ComboBoxItem x:Name="cbiSHA384" Content="SHA384"/>
+            <ComboBoxItem x:Name="cbiSHA512" Content="SHA512"/>
+        </ComboBox>
+        <ComboBox x:Name="keyLenComboBox" Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" SelectedIndex="{Binding Path=SavedKeyLength}" FontSize="15"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontWeight="SemiBold">
+            <ComboBox.ItemContainerStyle>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="FontSize" Value="15" />
+                </Style>
+            </ComboBox.ItemContainerStyle>
+            <ComboBoxItem x:Name="cbi2048" Content="2048" />
+            <ComboBoxItem x:Name="cbi4096" Content="4096" />
+            <ComboBoxItem x:Name="cbi8192" Content="8192" />
+            <ComboBoxItem x:Name="cbi16384" Content="16384" />
+        </ComboBox>
+        <ComboBox x:Name="storeComboBox" Grid.Row="3" Grid.Column="9" SelectedIndex="0" FontSize="15"
+                VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontWeight="SemiBold"
+                SelectionChanged="storeComboBox_SelectionChanged">
+            <ComboBox.ItemContainerStyle>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="FontSize" Value="15" />
+                </Style>
+            </ComboBox.ItemContainerStyle>
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Text}" Background="Transparent" Focusable="False"/>
+                        <Image Source="{Binding Image}" Width="15" Height="15" Focusable="False"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        
+        <!-- VALID UNTIL CLOCK/TIME DISPLAY -->
+        <Button x:Name="setExpirationBtn" Grid.Column="4" Grid.Row="5" Grid.ColumnSpan="3"
+                FontSize="18" Content="SET" FontWeight="Bold" Click="setExpirationBtn_Click"/>
+        <Label x:Name="expirationTime" Grid.Column="4" Grid.Row="5" Grid.ColumnSpan="5"
+               HorizontalContentAlignment="Left" VerticalContentAlignment="Center" FontSize="16"
+               FontWeight="Bold" Visibility="Hidden" IsEnabled="False"/>
+        <!-- END OF VALID UNTIL -->
+    </Grid>
+</Window>

@@ -1,26 +1,18 @@
 ﻿using MG;
-using Ookii.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml;
-using System.Xml.Linq;
+using System.Windows.Media.Animation;
 
 namespace Credential_Manager_App
 {
@@ -29,7 +21,7 @@ namespace Credential_Manager_App
     /// </summary>
     public partial class MainWindow : Window
     {
-        #region MainWindow - Properties
+        #region MainWindow - Fields/Properties
         internal AppSettings _app;
         public string AppNameAndVersion
         {
@@ -38,63 +30,50 @@ namespace Credential_Manager_App
                 AppDomain appId = AppDomain.CurrentDomain;
                 string ver = FileVersionInfo.GetVersionInfo(appId.BaseDirectory + appId.FriendlyName).FileVersion;
 
-                return appId.FriendlyName.Replace(".exe", String.Empty) + " - v" + ver;
+                return appId.FriendlyName.Replace(".exe", string.Empty) + " - v" + ver;
             }
-            set
-            {
-                AppNameAndVersion = value;
-            }
+            set => AppNameAndVersion = value;
         }
+        private bool _clrcrten = false;
+        public bool ClearCertEnabled
+        {
+            get => _clrcrten;
+            set => _clrcrten = value;
+        }
+        internal bool Prompt = false;
         internal object StoredCert;
         internal Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
         private string un;
         private string ps;
+        public CertListItem selectedCert;
+
+        public StoreLocation usingStore { get; set; }
 
         private const string defUserText = @"<Enter the username>";
         private const string defCertText = @"    <No Certificate Chosen>";
         public string CertificateText
         {
-            get
-            {
-                if (String.IsNullOrEmpty(_enc.ActiveThumbprint))
-                {
-                    return defCertText;
-                }
-                else
-                {
-                    return _enc.ActiveThumbprint;
-                }
-            }
+            get => string.IsNullOrEmpty(_enc.ActiveThumbprint) ? defCertText : _enc.ActiveThumbprint;
             set
             {
-                if (String.IsNullOrEmpty(value))
+                if (string.IsNullOrEmpty(value))
                 {
                     activeThumbprintBox.Text = defCertText;
+                    selectedCert = null;
                     _enc.ClearCertificate();
                 }
                 else
                 {
                     activeThumbprintBox.Text = value;
-                    _enc.SetActiveCertificate(value);
                 }
             }
         }
         internal string DefaultUserNameText
         {
-            get { return _defu; }
-            set
-            {
-                if (String.IsNullOrEmpty(value))
-                {
-                    _defu = defUserText;
-                }
-                else
-                {
-                    _defu = value;
-                }
-            }
+            get => _defu;
+            set => _defu = string.IsNullOrEmpty(value) ? defUserText : value;
         }
 
         #endregion
@@ -104,13 +83,31 @@ namespace Credential_Manager_App
         {
             _app = new AppSettings(GenerateSettingsDictionary());
             StoredCert = _app.Properties["EncryptionCertificate"];
+            var cs = (int)_app.Properties["CertificateStore"];
+            Array arr = typeof(StoreLocation).GetEnumValues();
+            for (int i = 0; i < arr.Length; i++)
+            {
+                var sl = (StoreLocation)arr.GetValue(i);
+                if (sl == (StoreLocation)cs)
+                {
+                    usingStore = sl;
+                }
+            }
             _defu = defUserText;
             _enc = new Encryption();
+            selectedCert = _enc.TextToCLI((string)StoredCert, usingStore);
             InitializeComponent();
-            if (!String.IsNullOrEmpty((string)StoredCert))
+            // If certificate is missing, go back to default
+            
+            if (!string.IsNullOrEmpty((string)StoredCert) && selectedCert != null)
             {
-                CertificateText = (string)StoredCert;
+                CertificateText = selectedCert.SHA1Thumbprint;
                 ChangeCertTextStyle(CertBoxStyles.Good, ((MainWindow)Application.Current.MainWindow).activeThumbprintBox);
+            }
+            else if (selectedCert == null)
+            {
+                CertificateText = defCertText;
+                ChangeCertTextStyle(CertBoxStyles.Bad, ((MainWindow)Application.Current.MainWindow).activeThumbprintBox);
             }
             LoadWindowDimensions();
             _defFont = FontFamily;
@@ -122,10 +119,11 @@ namespace Credential_Manager_App
         #region MainWindow - Methods
         private Dictionary<string, object> GenerateSettingsDictionary()
         {
-            Dictionary<string, object> setts = new Dictionary<string, object>()
+            var setts = new Dictionary<string, object>()
             {
                 { "RegKey", "CredentialManagerApp" },
-                { "EncryptionCertificate", String.Empty },
+                { "EncryptionCertificate", string.Empty },
+                { "CertificateStore", 1 },
                 { "WindowX", 800 },
                 { "WindowY", 450 }
             };
@@ -134,34 +132,41 @@ namespace Credential_Manager_App
         private Dictionary<string, object> AllInfoPresent(TabItem ti)
         {
             bool result = false;
-            string stillNeed;
-            // First check if Certificate is defined...
-            if (activeThumbprintBox != null && activeThumbprintBox.Text != defCertText)
+            Dictionary<string, Collection<UIElement>> stillNeed = new Dictionary<string, Collection<UIElement>>();
+            var gridCol = new Collection<UIElement>();
+            // Now, check if the requisite text boxes are filled in...
+            string gridName = ti.Uid;
+            var gotcha = (Grid)FindName(gridName);
+            var allElms = gotcha.Children.OfType<UIElement>().Cast<UIElement>().ToList();
+            IEnumerable<UIElement> gridBoxes = allElms.Where(x => x.Uid.Contains("gridTextBoxInput"));
+            foreach (UIElement u in gridBoxes)
             {
-                // Now, check if the requisite text boxes are filled in...
-                stillNeed = "Username or Password";
-                string gridName = ti.Uid;
-                Grid gotcha = (Grid)FindName(gridName);
-                List<UIElement> allElms = gotcha.Children.OfType<UIElement>().Cast<UIElement>().ToList();
-                IEnumerable<UIElement> gridBoxes = allElms.Where(x => x.Uid.Contains("gridTextBoxInput"));
-                for (int i = 0; i < gridBoxes.Count(); i++)
+                gridCol.Add(u);
+            }
+            for (int i = 0; i < gridBoxes.Count(); i++)
+            {
+                UIElement item = gridBoxes.ToList()[i];
+                Type itemType = item.GetType();
+                if (itemType == typeof(TextBox) && !string.IsNullOrEmpty(((TextBox)item).Text)
+                    && ((TextBox)item).Text != defUserText)
                 {
-                    UIElement item = gridBoxes.ToList()[i];
-                    Type itemType = item.GetType();
-                    if (itemType == typeof(TextBox) && !String.IsNullOrEmpty(((TextBox)item).Text)
-                        && ((TextBox)item).Text != defUserText)
-                    {
-                        result = true;
-                    }
-                    else if (itemType == typeof(PasswordBox) && !String.IsNullOrEmpty(((PasswordBox)item).Password))
-                    {
-                        result = true;
-                    }
+                    result = true;
+                }
+                else if (itemType == typeof(PasswordBox) && !string.IsNullOrEmpty(((PasswordBox)item).Password))
+                {
+                    result = true;
                 }
             }
-            else
+            // First check if Certificate is defined...
+            if ((ti.Uid == "encAreaGrid" && string.IsNullOrEmpty(inputPlainUserName.Text) && string.IsNullOrEmpty(inputPlainPasswordBox.Password)) ||
+                 (ti.Uid == "decAreaGrid" && string.IsNullOrEmpty(inputHashUserName.Text) && string.IsNullOrEmpty(inputHashPassword.Text)))
             {
-                stillNeed = "Certificate";
+                stillNeed.Add("Username or Password", gridCol);
+            }
+            if (activeThumbprintBox == null || activeThumbprintBox.Text == defCertText)
+            {
+                result = false;
+                stillNeed.Add("Certificate", new Collection<UIElement>() { activeThumbprintBox });
             }
             return new Dictionary<string, object>()
             {
@@ -170,50 +175,19 @@ namespace Credential_Manager_App
             };
         }
 
-        //private enum EncryptButtonStatus : int
-        //{
-        //    Off = 0,
-        //    On = 1
-        //}
+        private void SaveCertThumbprint(string thumbprint) => _app.SetPropertyValue("EncryptionCertificate", thumbprint);
 
-        //private void ChangeEncryptButtonStatus(EncryptButtonStatus status)
-        //{
-        //    if (encryptBtn != null)
-        //    {
-        //        switch (status)
-        //        {
-        //            case EncryptButtonStatus.Off:
-        //                encryptBtn.IsDefault = false;
-        //                encryptBtn.IsEnabled = false;
-        //                selectCertBtn.IsDefault = true;
-        //                break;
-        //            case EncryptButtonStatus.On:
-        //                encryptBtn.IsEnabled = true;
-        //                selectCertBtn.IsDefault = false;
-        //                encryptBtn.IsDefault = true;
-        //                break;
-        //        }
-        //    }
-        //}
-
-        private void SaveCertThumbprint(string thumbprint)
-        {
-            _app.SetPropertyValue("EncryptionCertificate", thumbprint);
-        }
-
-        private void exitBtn_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        private void exitBtn_Click(object sender, RoutedEventArgs e) => Close();
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (!_enc.ActiveThumbprint.Equals(StoredCert))
+            if (!Prompt && !_enc.ActiveThumbprint.Equals(StoredCert))
             {
                 MessageBoxResult question = MessageBox.Show("Would you like to save the current certificate settings?", "Before you go...", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
                 if (question == MessageBoxResult.Yes)
                 {
                     SaveCertThumbprint(_enc.ActiveThumbprint);
+                    _app.SetPropertyValue("CertificateStore", usingStore);
                 }
                 else if (question == MessageBoxResult.Cancel)
                 {
@@ -226,10 +200,20 @@ namespace Credential_Manager_App
 
         #endregion
 
+        #region Elevation
+        public static bool IsAdministrator()
+        {
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        #endregion
+
         #region MainWindow - Dimension Operations
         private void Window_StateChanged(object sender, EventArgs e)
         {
-            MainWindow mw = (MainWindow)sender;
+            var mw = (MainWindow)sender;
             if (mw.WindowState == WindowState.Maximized)
             {
                 mw.WindowState = WindowState.Normal;
@@ -251,6 +235,34 @@ namespace Credential_Manager_App
 
         #endregion
 
+        #region Graphics Methods
+        private void BlinkColor(dynamic ele, Color color)
+        {
+            var ca = new ColorAnimation(color, Colors.White, new Duration(TimeSpan.FromMilliseconds(1500)));
+            var solid = new SolidColorBrush(color);
+            DependencyProperty dp = SolidColorBrush.ColorProperty;
+            switch (ele.GetType().Name)
+            {
+                case "TextBox":
+                    var tb = (TextBox)ele;
+                    tb.Background = solid;
+                    tb.Background.BeginAnimation(dp, ca);
+                    break;
+                case "PasswordBox":
+                    var pb = (PasswordBox)ele;
+                    pb.Background = solid;
+                    pb.Background.BeginAnimation(dp, ca);
+                    break;
+                case "TextBlock":
+                    var tbk = (TextBlock)ele;
+                    tbk.Background = solid;
+                    tbk.Background.BeginAnimation(dp, ca);
+                    break;
+            }
+        }
+
+        #endregion
+
         #region Encrypt Button Behavior
         private enum EncryptButtonBehavior : int
         {
@@ -264,20 +276,20 @@ namespace Credential_Manager_App
             switch (tabIndex)
             {
                 case 0:
-                    inputPlainUserName.Text = String.Empty;
-                    inputPlainPasswordBox.Password = String.Empty;
-                    outputHashUserName.Text = String.Empty;
-                    outputHashPassword.Text = String.Empty;
+                    inputPlainUserName.Text = string.Empty;
+                    inputPlainPasswordBox.Password = string.Empty;
+                    outputHashUserName.Text = string.Empty;
+                    outputHashPassword.Text = string.Empty;
                     return new Dictionary<string, object>()
                     {
                         { "Content", "ENCRYPT" },
                         { "Behavior", EncryptButtonBehavior.Encrypt }
                     };
                 case 1:
-                    inputHashUserName.Text = String.Empty;
-                    inputHashPassword.Text = String.Empty;
-                    outputPlainUserName.Text = String.Empty;
-                    outputPass.Password = String.Empty;
+                    inputHashUserName.Text = string.Empty;
+                    inputHashPassword.Text = string.Empty;
+                    outputPlainUserName.Text = string.Empty;
+                    outputPass.Password = string.Empty;
                     return new Dictionary<string, object>()
                     {
                         { "Content", "DECRYPT" },
@@ -287,9 +299,10 @@ namespace Credential_Manager_App
                     return null;
             }
         }
+
         private void EncryptBtn_Click(object sender, RoutedEventArgs e)
         {
-            Button eb = (Button)sender;
+            var eb = (Button)sender;
             Dictionary<string, object> Check = AllInfoPresent((TabItem)tabControl.SelectedItem);
             if (Check["Result"].Equals(true))
             {
@@ -308,15 +321,29 @@ namespace Credential_Manager_App
             }
             else
             {
+                var failedItems = Check["FailedItems"] as Dictionary<string, Collection<UIElement>>;
+                Color red = Colors.Red;
+                string[] failures = failedItems.Keys.ToArray();
                 MessageBox.Show("Some fields are still blank!  Populate the following fields and try again." +
                     Environment.NewLine + Environment.NewLine +
-                    Check["FailedItems"], "WOAH!", MessageBoxButton.OK, MessageBoxImage.Error);
+                    string.Join(" and ", failures), "WOAH!", MessageBoxButton.OK, MessageBoxImage.Error);
+                for (int v = 0; v < failedItems.Count; v++)
+                {
+                    string key = failedItems.Keys.ToArray()[v];
+                    Collection<UIElement> dictVal = failedItems[key];
+                    for (int i = 0; i < dictVal.Count; i++)
+                    {
+                        UIElement uie = dictVal[i];
+                        BlinkColor(uie, red);
+                    }
+                }
                 return;
             }
         }
+
         private void EncryptButton_Encrypt(object sender, Dictionary<string, object> credResult = null)
         {
-            Button eb = (Button)sender;
+            var eb = (Button)sender;
             // Do you shit here!
             string un;
             string ps;
@@ -331,11 +358,11 @@ namespace Credential_Manager_App
                 un = inputPlainUserName.Text;
                 ps = inputPlainPasswordBox.Password;
             }
-            if (!String.IsNullOrEmpty(ps))
+            if (!string.IsNullOrEmpty(ps))
             {
                 outputHashPassword.Text = _enc.EncryptStringToString(ps);
             }
-            if (!String.IsNullOrEmpty(un))
+            if (!string.IsNullOrEmpty(un))
             {
                 outputHashUserName.Text = _enc.EncryptStringToString(un);
             }
@@ -344,14 +371,14 @@ namespace Credential_Manager_App
         }
         private void EncryptButton_Decrypt(object sender)
         {
-            Button eb = (Button)sender;
+            var eb = (Button)sender;
             try
             {
-                if (!String.IsNullOrEmpty(inputHashUserName.Text))
+                if (!string.IsNullOrEmpty(inputHashUserName.Text))
                 {
                     un = _enc.PlainDecrypt(inputHashUserName.Text);
                 }
-                if (!String.IsNullOrEmpty(inputHashPassword.Text))
+                if (!string.IsNullOrEmpty(inputHashPassword.Text))
                 {
                     ps = _enc.PlainDecrypt(inputHashPassword.Text);
                 }
@@ -361,12 +388,12 @@ namespace Credential_Manager_App
                 MessageBox.Show(e.Message, e.GetType().FullName, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if (!String.IsNullOrEmpty(un))
+            if (!string.IsNullOrEmpty(un))
             {
                 outputPlainUserName.Text = un;
                 un = null;
             }
-            if (!String.IsNullOrEmpty(ps))
+            if (!string.IsNullOrEmpty(ps))
             {
                 outputPass.Password = ps;
                 ps = null;
@@ -376,9 +403,9 @@ namespace Credential_Manager_App
         }
         private void EncryptButton_Reset(object sender, int selectedIndex)
         {
-            Button eb = (Button)sender;
+            var eb = (Button)sender;
             // Do you shit here!
-             Dictionary<string, object> result = ResetFields(selectedIndex);
+            Dictionary<string, object> result = ResetFields(selectedIndex);
             eb.Content = result["Content"];
             eb.CommandParameter = result["Behavior"];
         }
@@ -408,15 +435,28 @@ namespace Credential_Manager_App
         }
         private void activeThumbprintBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            TextBox tb = (TextBox)sender;
+            if (selectedCert != null && _enc.ActiveThumbprint != selectedCert.SHA1Thumbprint)
+            {
+                _enc.SetActiveCertificate(selectedCert);
+            }
+
+            var specialBlue = Color.FromRgb(
+                byte.Parse(Convert.ToString(51)),
+                byte.Parse(Convert.ToString(102)),
+                byte.Parse(Convert.ToString(153))
+            );
+            var tb = (TextBox)sender;
             if (tb.Text == defCertText)
             {
+                ChangeContextMenuItemAvailability("clearCertificate", false);
                 ChangeCertTextStyle(CertBoxStyles.Bad, tb);
             }
             else
             {
+                ChangeContextMenuItemAvailability("clearCertificate", true);
                 ChangeCertTextStyle(CertBoxStyles.Good, tb);
             }
+            BlinkColor(tb, specialBlue);
         }
 
         #endregion
@@ -424,11 +464,11 @@ namespace Credential_Manager_App
         #region Input Plain UserName TextBox Behavior
         private void inputPlainUserName_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            TextBox tb = (TextBox)sender;
+            var tb = (TextBox)sender;
             tb.HorizontalContentAlignment = HorizontalAlignment.Left;
             if (tb.FontStyle == FontStyles.Italic)
             {
-                tb.Text = String.Empty;
+                tb.Text = string.Empty;
                 tb.FontStyle = FontStyles.Normal;
                 tb.FontFamily = (FontFamily)Resources["activeFont"];
                 tb.FontSize = 14;
@@ -441,8 +481,8 @@ namespace Credential_Manager_App
         }
         private void inputPlainUserName_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            TextBox unbox = (TextBox)sender;
-            if (String.IsNullOrEmpty(unbox.Text))
+            var unbox = (TextBox)sender;
+            if (string.IsNullOrEmpty(unbox.Text))
             {
                 unbox.HorizontalContentAlignment = HorizontalAlignment.Center;
                 unbox.FontStyle = FontStyles.Italic;
@@ -453,7 +493,7 @@ namespace Credential_Manager_App
         }
         private void inputPlainUserName_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            TextBox tb = (TextBox)sender;
+            var tb = (TextBox)sender;
             if (!tb.IsKeyboardFocusWithin)
             {
                 e.Handled = true;
@@ -463,7 +503,7 @@ namespace Credential_Manager_App
         //private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
         //{
         //    TextBox tb = (TextBox)sender;
-        //    if (tb.Text != defUserText && !String.IsNullOrEmpty(tb.Text) && activeThumbprintBox.Text != defCertText)
+        //    if (tb.Text != defUserText && !string.IsNullOrEmpty(tb.Text) && activeThumbprintBox.Text != defCertText)
         //    {
         //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
         //    }
@@ -478,15 +518,15 @@ namespace Credential_Manager_App
         #region Input Plain Password Box Behavior
         private void inputPlainPasswordBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            PasswordBox pb = (PasswordBox)sender;
-            if (!String.IsNullOrEmpty(pb.Password))
+            var pb = (PasswordBox)sender;
+            if (!string.IsNullOrEmpty(pb.Password))
             {
                 pb.SelectAll();
             }
         }
         private void inputPlainPasswordBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            PasswordBox pb = (PasswordBox)sender;
+            var pb = (PasswordBox)sender;
             if (!pb.IsKeyboardFocusWithin)
             {
                 e.Handled = true;
@@ -496,7 +536,7 @@ namespace Credential_Manager_App
         //private void PassBox_PasswordChanged(object sender, RoutedEventArgs e)
         //{
         //    PasswordBox pb = (PasswordBox)sender;
-        //    if ((!String.IsNullOrEmpty(pb.Password) || !String.IsNullOrEmpty(inputPlainUserName.Text)) &&
+        //    if ((!string.IsNullOrEmpty(pb.Password) || !string.IsNullOrEmpty(inputPlainUserName.Text)) &&
         //        activeThumbprintBox.Text != defCertText)
         //    {
         //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
@@ -512,7 +552,7 @@ namespace Credential_Manager_App
         #region Input Hash UserName TextBox Behavior
         private void InputHash_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            TextBox tb = (TextBox)sender;
+            var tb = (TextBox)sender;
             if (!tb.IsKeyboardFocusWithin)
             {
                 e.Handled = true;
@@ -521,8 +561,8 @@ namespace Credential_Manager_App
         }
         private void InputHash_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            TextBox tb = (TextBox)sender;
-            if (!String.IsNullOrEmpty(tb.Text))
+            var tb = (TextBox)sender;
+            if (!string.IsNullOrEmpty(tb.Text))
             {
                 tb.SelectAll();
             }
@@ -531,7 +571,7 @@ namespace Credential_Manager_App
         //private void Input_TextChanged(object sender, TextChangedEventArgs e)
         //{
         //    TextBox tb = (TextBox)sender;
-        //    if (!String.IsNullOrEmpty(tb.Text) && !String.IsNullOrEmpty(activeThumbprintBox.Text))
+        //    if (!string.IsNullOrEmpty(tb.Text) && !string.IsNullOrEmpty(activeThumbprintBox.Text))
         //    {
         //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
         //    }
@@ -540,33 +580,35 @@ namespace Credential_Manager_App
         #endregion
 
         #region Select Certificate Button Behavior
-        private void selectCertBtn_Click(object sender, RoutedEventArgs e)
+        private void selectCertBtn_Click(object sender, RoutedEventArgs e) => CertSelectorThread(false);
+
+        internal void CertSelectorThread(bool machineContext)
         {
-            Thread cThread = new Thread(OpenCertSelector)
+            var cThread = new Thread(new ParameterizedThreadStart(OpenCertSelector))
             {
                 Name = "CertSelector",
                 IsBackground = true
             };
             cThread.SetApartmentState(ApartmentState.STA);
-            cThread.Start();
+            cThread.Start(machineContext);
         }
-
 
         #endregion
 
         #region CertBox Right-Click Menu
         private void findInstallablePfx_Click(object sender, RoutedEventArgs e)
         {
-            X509Certificate2 cert = SharedPrompt.PfxPrompt();
+            X509Certificate2 cert = SharedPrompt.PfxPrompt(usingStore);
             if (cert != null)
             {
                 CertificateText = cert.Thumbprint;
             }
         }
 
-        private void OpenCertSelector()
+        internal void OpenCertSelector(object machineContext)
         {
-            CertSelector certSelector = new CertSelector();
+            bool ctx = (bool)machineContext;
+            var certSelector = new CertSelector(ctx);
             bool? result = certSelector.ShowDialog();
             if (result.HasValue && result.Value)
             {
@@ -574,17 +616,35 @@ namespace Credential_Manager_App
                 {
                     CertificateText = certSelector.SelectedCert.SHA1Thumbprint;
                 });
+                _enc.SetActiveCertificate(certSelector.SelectedCert);
+                var st = certSelector.SelectedCert.StoreLocation;
+                selectedCert = certSelector.SelectedCert;
+                usingStore = st;
+                _enc.workingStore = st;
+            }
+            else if (certSelector.Prompt)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    Prompt = true;
+                    Application.Current.Shutdown();
+                });
             }
             GC.Collect();
         }
 
-        private void clearCertificate_Click(object sender, RoutedEventArgs e)
+        private void ChangeContextMenuItemAvailability(string name, bool isEnabled)
         {
-            CertificateText = String.Empty;
+            Grid g = certGridArea;
+            ((ContextMenu)g.Resources["CertificateContextMenu"]).Items.OfType<MenuItem>().Single(
+                x => x.Name == name
+            ).IsEnabled = isEnabled;
         }
+
+        private void clearCertificate_Click(object sender, RoutedEventArgs e) => CertificateText = string.Empty;
         public void ViewCertificate_Click(object sender, RoutedEventArgs e)
         {
-            CertListItem cert = new CertListItem(_enc.GetActiveCertificate());
+            var cert = new CertListItem(_enc.GetActiveCertificate());
             cert.ViewCertificate();
         }
 
@@ -593,9 +653,9 @@ namespace Credential_Manager_App
         #region HashBox Right-Click Menu
         private void selectAll_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem mi = (MenuItem)e.Source;
-            ContextMenu ctxMenu = (ContextMenu)mi.Parent;
-            TextBox tb = (TextBox)ctxMenu.PlacementTarget;
+            var mi = (MenuItem)e.Source;
+            var ctxMenu = (ContextMenu)mi.Parent;
+            var tb = (TextBox)ctxMenu.PlacementTarget;
             tb.SelectAll();
         }
 
@@ -604,7 +664,7 @@ namespace Credential_Manager_App
         #region Copy to Clipboard Button Behavior
         private void CopyBtnClip_Click(object sender, RoutedEventArgs e)
         {
-            Button but = (Button)sender;
+            var but = (Button)sender;
             var getme = encAreaGrid.Children.OfType<UIElement>().ToList().Where(x => x.Uid.Contains("gridTextBox")).ToList();
             foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList().Where(x => x.Uid.Contains("gridTextBox")))
             {
@@ -627,7 +687,7 @@ namespace Credential_Manager_App
         }
         private void passBoxCopyBtn_Click(object sender, RoutedEventArgs e)
         {
-            Button pb = (Button)sender;
+            var pb = (Button)sender;
             var getme = encAreaGrid.Children.OfType<UIElement>().ToList();
             foreach (UIElement item in decAreaGrid.Children.OfType<UIElement>().ToList())
             {
@@ -645,11 +705,11 @@ namespace Credential_Manager_App
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             e.Handled = true;
-            TabItem ti = (TabItem)e.AddedItems[0];
+            var ti = (TabItem)e.AddedItems[0];
             switch (ti.Name)
             {
                 case "EncryptTab":
-                    if (!String.IsNullOrEmpty(outputHashUserName.Text) || !String.IsNullOrEmpty(outputHashPassword.Text))
+                    if (!string.IsNullOrEmpty(outputHashUserName.Text) || !string.IsNullOrEmpty(outputHashPassword.Text))
                     {
                         encryptBtn.Content = "RESET";
                         encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
@@ -661,7 +721,7 @@ namespace Credential_Manager_App
                     }
                     break;
                 case "DecryptTab":
-                    if (!String.IsNullOrEmpty(outputPlainUserName.Text) || !String.IsNullOrEmpty(outputPass.Password))
+                    if (!string.IsNullOrEmpty(outputPlainUserName.Text) || !string.IsNullOrEmpty(outputPass.Password))
                     {
                         encryptBtn.Content = "RESET";
                         encryptBtn.CommandParameter = EncryptButtonBehavior.Reset;
