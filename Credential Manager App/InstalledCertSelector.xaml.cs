@@ -170,5 +170,42 @@ namespace Credential_Manager_App
                 }
             }
         }
+
+        private void viewCertMI_Click(object sender, RoutedEventArgs e)
+        {
+            var lvi = listOCerts.SelectedItem as CertListItem;
+            lvi.ViewCertificate();
+        }
+
+        private void delCertMI_Click(object sender, RoutedEventArgs e)
+        {
+            var rusure = MessageBox.Show("Are you sure want to delete this certificate?" + Environment.NewLine + Environment.NewLine +
+                "This action is permanent and final!", "DELETE CERTIFICATE?", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            if (rusure == MessageBoxResult.Yes)
+            {
+                var cli = listOCerts.SelectedItem as CertListItem;
+                X509Certificate2 cert = cli.GetCertificate();
+                using (var store = new X509Store(usingStore))
+                {
+                    store.Open(OpenFlags.OpenExistingOnly);
+                    store.Remove(cert);
+                }
+            }
+        }
+
+        private void listOCerts_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            switch (listOCerts.SelectedItems.Count)
+            {
+                case 1:
+                    viewCertMI.IsEnabled = true;
+                    //delCertMI.IsEnabled = true;
+                    break;
+                default:
+                    //delCertMI.IsEnabled = false;
+                    viewCertMI.IsEnabled = false;
+                    break;
+            }
+        }
     }
 }

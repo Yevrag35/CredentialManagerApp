@@ -41,7 +41,7 @@ namespace Credential_Manager_App
             set => _clrcrten = value;
         }
         internal bool Prompt = false;
-        internal object StoredCert;
+        internal string StoredCert;
         internal Encryption _enc;
         private FontFamily _defFont;
         private string _defu;
@@ -82,8 +82,8 @@ namespace Credential_Manager_App
         public MainWindow()
         {
             _app = new AppSettings(GenerateSettingsDictionary());
-            StoredCert = _app.Properties["EncryptionCertificate"];
-            var cs = (int)_app.Properties["CertificateStore"];
+            StoredCert = _app.GetProperty<string>("EncryptionCertificate");
+            var cs = _app.GetProperty<int>("CertificateStore");
             Array arr = typeof(StoreLocation).GetEnumValues();
             for (int i = 0; i < arr.Length; i++)
             {
@@ -95,11 +95,11 @@ namespace Credential_Manager_App
             }
             _defu = defUserText;
             _enc = new Encryption();
-            selectedCert = _enc.TextToCLI((string)StoredCert, usingStore);
+            selectedCert = _enc.TextToCLI(StoredCert, usingStore);
             InitializeComponent();
             // If certificate is missing, go back to default
             
-            if (!string.IsNullOrEmpty((string)StoredCert) && selectedCert != null)
+            if (!string.IsNullOrEmpty(StoredCert) && selectedCert != null)
             {
                 CertificateText = selectedCert.SHA1Thumbprint;
                 ChangeCertTextStyle(CertBoxStyles.Good, ((MainWindow)Application.Current.MainWindow).activeThumbprintBox);
@@ -224,13 +224,13 @@ namespace Credential_Manager_App
 
         private void LoadWindowDimensions()
         {
-            Height = (int)_app.Properties["WindowY"];
-            Width = (int)_app.Properties["WindowX"];
+            Height = _app.GetProperty<double>("WindowY");
+            Width = _app.GetProperty<double>("WindowX");
         }
         private void SaveWindowDimensions()
         {
-            _app.SetPropertyValue("WindowX", (int)ActualWidth);
-            _app.SetPropertyValue("WindowY", (int)ActualHeight);
+            _app.SetPropertyValue("WindowX", ActualWidth);
+            _app.SetPropertyValue("WindowY", ActualHeight);
         }
 
         #endregion
@@ -500,18 +500,6 @@ namespace Credential_Manager_App
                 tb.Focus();
             }
         }
-        //private void UserNameBox_TextChanged(object sender, TextChangedEventArgs e)
-        //{
-        //    TextBox tb = (TextBox)sender;
-        //    if (tb.Text != defUserText && !string.IsNullOrEmpty(tb.Text) && activeThumbprintBox.Text != defCertText)
-        //    {
-        //        ChangeEncryptButtonStatus(EncryptButtonStatus.On);
-        //    }
-        //    else
-        //    {
-        //        ChangeEncryptButtonStatus(EncryptButtonStatus.Off);
-        //    }
-        //}
 
         #endregion
 

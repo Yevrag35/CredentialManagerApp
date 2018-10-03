@@ -130,7 +130,7 @@ namespace Credential_Manager_App
             var algVal = Oid.FromFriendlyName("RSA", OidGroup.PublicKeyAlgorithm);
             algId.InitializeFromValue(algVal.Value);
             pk.Algorithm = algId;
-            pk.KeySpec = (X509KeySpec)2;
+            pk.KeySpec = X509KeySpec.XCN_AT_KEYEXCHANGE;
             pk.Length = KeyLength;
             pk.MachineContext = MachineContext;
             pk.ExportPolicy = X509PrivateKeyExportFlags.XCN_NCRYPT_ALLOW_EXPORT_FLAG;

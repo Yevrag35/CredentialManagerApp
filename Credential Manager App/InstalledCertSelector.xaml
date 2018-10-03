@@ -142,7 +142,7 @@
                 HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" Click="pfxInstallerBtn_Click"/>
 
         <ListView x:Name="listOCerts" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="7" Grid.RowSpan="2" ScrollViewer.CanContentScroll="False"
-                 SelectionMode="Single" DataContext="{Binding Path=certCol}" ItemsSource="{Binding}">
+                 SelectionMode="Single" DataContext="{Binding Path=certCol}" ItemsSource="{Binding}" MouseRightButtonUp="listOCerts_MouseRightButtonUp">
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -151,6 +151,12 @@
                     <Setter Property="FontFamily" Value="{StaticResource DefaultFont}" />
                 </Style>
             </ListView.Resources>
+            <ListView.ContextMenu>
+                <ContextMenu x:Name="rcCertMenu">
+                    <MenuItem x:Name="viewCertMI" Header="View" Click="viewCertMI_Click"/>
+                    <MenuItem x:Name="delCertMI" Header="Delete" Click="delCertMI_Click" IsEnabled="False"/>
+                </ContextMenu>
+            </ListView.ContextMenu>
             <ListView.View>
                 <GridView >
                     <GridView.Columns>
